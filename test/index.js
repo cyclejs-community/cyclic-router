@@ -1,8 +1,7 @@
 /* eslint max-nested-callbacks: 0 */
 import {describe, it} from 'mocha'
 import assert from 'assert'
-import {createMockHistory} from './helper/mockHistory'
-import {makeRouterDriver} from '../src'
+import {makeRouterDriver, createServerHistory} from '../src'
 
 describe('Cyclic Router', () => {
   describe('makeRouterDriver', () => {
@@ -14,7 +13,7 @@ describe('Cyclic Router', () => {
 
     it('should accept any object with a listen() method', () => {
       assert.doesNotThrow(() => {
-        makeRouterDriver(createMockHistory())
+        makeRouterDriver(createServerHistory())
       })
     })
 
@@ -22,7 +21,7 @@ describe('Cyclic Router', () => {
       it('should return an object with `path` `define` `observable` ' +
         '`createHref` and `dispose`',
         () => {
-          const router = makeRouterDriver(createMockHistory())()
+          const router = makeRouterDriver(createServerHistory())()
           assert.notStrictEqual(router.path, null)
           assert.strictEqual(typeof router.path, 'function')
           assert.notStrictEqual(router.define, null)
@@ -42,7 +41,7 @@ describe('Cyclic Router', () => {
     it('should return an object with `path` `define` `observable` ' +
       '`createHref` and `dispose`',
       () => {
-        const router = makeRouterDriver(createMockHistory())().path('/')
+        const router = makeRouterDriver(createServerHistory())().path('/')
         assert.notStrictEqual(router.path, null)
         assert.strictEqual(typeof router.path, 'function')
         assert.notStrictEqual(router.define, null)
@@ -61,7 +60,7 @@ describe('Cyclic Router', () => {
         '/somewhere/else',
         '/path/that/is/correct',
       ]
-      const history = createMockHistory(routes)
+      const history = createServerHistory(routes)
       const router = makeRouterDriver(history)().path('/path')
 
       router.observable.subscribe((location) => {
@@ -77,7 +76,7 @@ describe('Cyclic Router', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createMockHistory(routes)
+      const history = createServerHistory(routes)
       const router = makeRouterDriver(history)()
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
@@ -95,7 +94,7 @@ describe('Cyclic Router', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createMockHistory(routes)
+      const history = createServerHistory(routes)
       const router = makeRouterDriver(history)()
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
@@ -116,7 +115,7 @@ describe('Cyclic Router', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createMockHistory(routes)
+      const history = createServerHistory(routes)
       const router = makeRouterDriver(history)()
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
@@ -131,7 +130,7 @@ describe('Cyclic Router', () => {
     it('should return an object with `path$` `value$` `fullPath$` ' +
       '`createHref` and `dispose`',
       () => {
-        const router = makeRouterDriver(createMockHistory())().define({})
+        const router = makeRouterDriver(createServerHistory())().define({})
         assert.notStrictEqual(router.path$, null)
         assert.strictEqual(typeof router.path$, 'object')
         assert.strictEqual(typeof router.path$.subscribe, 'function')
@@ -157,7 +156,7 @@ describe('Cyclic Router', () => {
       const routes = [
         '/some/route',
       ]
-      const history = createMockHistory(routes)
+      const history = createServerHistory()
       const {path$, value$, fullPath$} =
         makeRouterDriver(history)().define(defintion)
 
@@ -173,6 +172,8 @@ describe('Cyclic Router', () => {
         assert.strictEqual(fullPath, '/some/route')
         setTimeout(done, 10)
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('should respect prior filtering by path()', done => {
@@ -187,7 +188,7 @@ describe('Cyclic Router', () => {
         '/some/nested/correct/route',
         '/wrong/route',
       ]
-      const history = createMockHistory(routes)
+      const history = createServerHistory()
       const {path$, value$, fullPath$} = makeRouterDriver(history)()
           .path('/some').path('/nested').define(defintion)
 
@@ -203,6 +204,8 @@ describe('Cyclic Router', () => {
         assert.strictEqual(fullPath, '/some/nested/correct/route')
         setTimeout(done, 10)
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('should match a default route if one is not found', done => {
@@ -218,7 +221,7 @@ describe('Cyclic Router', () => {
         '/some/nested/incorrect/route',
         '/wrong/route',
       ]
-      const history = createMockHistory(routes)
+      const history = createServerHistory()
       const {path$, value$, fullPath$} = makeRouterDriver(history)()
           .path('/some').path('/nested').define(defintion)
 
@@ -234,6 +237,8 @@ describe('Cyclic Router', () => {
         assert.strictEqual(fullPath, '/some/nested/incorrect/route')
         setTimeout(done, 10)
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('should create a proper href using createHref()', done => {
@@ -250,7 +255,7 @@ describe('Cyclic Router', () => {
         '/wrong/route',
       ]
 
-      const history = createMockHistory(routes)
+      const history = createServerHistory()
       const {fullPath$, createHref} = makeRouterDriver(history)()
           .path('/some').path('/nested').define(defintion)
 
@@ -259,6 +264,8 @@ describe('Cyclic Router', () => {
         assert.strictEqual(createHref('/correct/route'), pathname)
         setTimeout(done, 5)
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('should match partials', done => {
@@ -275,7 +282,7 @@ describe('Cyclic Router', () => {
         '/wrong/route',
       ]
 
-      const history = createMockHistory(routes)
+      const history = createServerHistory()
       const {path$, fullPath$} = makeRouterDriver(history)()
           .path('/some').path('/nested').define(defintion)
 
@@ -287,6 +294,8 @@ describe('Cyclic Router', () => {
         assert.strictEqual(pathname, '/some/nested/correct/route/partial')
         setTimeout(done, 5)
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('should not work after being disposed', done => {
@@ -303,12 +312,13 @@ describe('Cyclic Router', () => {
         '/wrong/route',
       ]
 
-      const history = createMockHistory(routes)
+      const history = createServerHistory()
       const {fullPath$, dispose} = makeRouterDriver(history)()
           .path('/some').path('/nested').define(defintion)
 
       dispose()
       fullPath$.subscribe(done.fail)
+      routes.forEach(r => history.push(r))
       setTimeout(done, 10)
     })
   })

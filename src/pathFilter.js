@@ -2,7 +2,7 @@ import {createAPI} from './api'
 import {splitPath} from './util'
 
 function isStrictlyInScope(namespace, path) {
-  const pathParts = path.split('/').filter(x => x.length > 0)
+  const pathParts = splitPath(path)
   return namespace.every((v, i) => {
     return pathParts[i] === v
   })
