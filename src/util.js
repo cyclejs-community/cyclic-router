@@ -12,6 +12,8 @@ function supportsHistory() {
 
   if (typeof window !== `undefined`) {
     return window.history && `pushState` in window.history
+  } else {
+    return false
   }
 }
 
@@ -35,4 +37,26 @@ function makeCreateHref(namespace, createHref) {
   }
 }
 
-export {supportsHistory, splitPath, filterPath, makeCreateHref}
+const locationDefaults = {
+  pathname: '/',
+  action: 'POP',
+  hash: '',
+  search: '',
+  state: null,
+  key: null,
+}
+
+function createLocation(location = locationDefaults) {
+  if (typeof location === 'string') {
+    return Object.assign(locationDefaults, {pathname: location})
+  }
+  return Object.assign(locationDefaults, location)
+}
+
+export {
+  supportsHistory,
+  splitPath,
+  filterPath,
+  makeCreateHref,
+  createLocation,
+}
