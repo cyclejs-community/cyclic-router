@@ -47,6 +47,7 @@
     "eslint-plugin-no-class": "^0.1.0",
     "history": "^1.17.0",
     "mocha": "^2.4.5",
+    "rx": "^4.0.7",
     "testem": "^0.9.11"
   },
   "dependencies": {
