@@ -1,0 +1,55 @@
+{
+  "name": "cyclic-router",
+  "version": "0.0.0",
+  "description": "A router designed for Cycle.js",
+  "main": "lib/index.js",
+  "scripts": {
+    "lint": "eslint src/",
+    "mocha": "mocha -r babel-register",
+    "test": "npm run lint && npm run mocha",
+    "lib": "babel src/ -d lib/",
+    "prepublish": "npm run lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tylors/cyclic-router.git"
+  },
+  "keywords": [
+    "Cycle",
+    "history",
+    "router",
+    "rx",
+    "reactive",
+    "streams"
+  ],
+  "author": "Tylor Steinberger <tlsteinberger167@gmail.com> (github.com/TylorS)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tylors/cyclic-router/issues"
+  },
+  "homepage": "https://github.com/tylors/cyclic-router#readme",
+  "peerDependencies": {
+    "history": "^1.17.0",
+    "rx": "*"
+  },
+  "devDependencies": {
+    "assert": "^1.3.0",
+    "babel-cli": "^6.4.5",
+    "babel-core": "^6.4.5",
+    "babel-eslint": "^4.1.8",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-register": "^6.4.3",
+    "babelify": "^7.2.0",
+    "browserify": "^13.0.0",
+    "eslint": "^1.10.3",
+    "eslint-config-cycle": "^3.2.0",
+    "eslint-plugin-cycle": "^1.0.2",
+    "eslint-plugin-no-class": "^0.1.0",
+    "history": "^1.17.0",
+    "mocha": "^2.4.5",
+    "testem": "^0.9.11"
+  },
+  "dependencies": {
+    "switch-path": "^1.1.3"
+  }
+}
