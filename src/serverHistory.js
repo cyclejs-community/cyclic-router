@@ -1,17 +1,19 @@
 import {createLocation} from './util'
 
-function ServerHistory() {}
+function ServerHistory() {
+  this.listeners = []
+}
 
 ServerHistory.prototype.listen = function listen(listener) {
-  this.listener = listener
+  this.listeners.push(listener)
 }
 
 ServerHistory.prototype.push = function push(location) {
-  const listener = this.listener
-  if (!listener) {
+  const listeners = this.listeners
+  if (!listeners || listeners.length === 0) {
     throw new Error('There is no active listener')
   }
-  listener(createLocation(location))
+  listeners.forEach(l => l(createLocation(location)))
 }
 
 ServerHistory.prototype.createHref = function createHref(path) {
