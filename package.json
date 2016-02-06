@@ -4,10 +4,13 @@
   "description": "A router designed for Cycle.js",
   "main": "lib/index.js",
   "scripts": {
+    "docs": "rm -rf docs && mkdir docs && documentation -t documentation-theme-default -f 'html' -g -o docs/ src/*.js",
     "lint": "eslint src/",
-    "mocha": "mocha -r babel-register",
+    "premocha": "babel-node ./buildTests.js",
+    "mocha": "mocha test/bundle.js",
+    "postmocha": "rm test/bundle.js",
     "test": "npm run lint && npm run mocha",
-    "lib": "babel src/ -d lib/",
+    "lib": "babel --presets es2015 src/ -d lib/",
     "prepublish": "npm run lib"
   },
   "repository": {
@@ -41,6 +44,8 @@
     "babelify": "^7.2.0",
     "browserify": "^13.0.0",
     "cyclic-history": "^0.1.0",
+    "documentation": "^3.0.4",
+    "documentation-theme-serif": "documentationjs/documentation-theme-serif",
     "eslint": "^1.10.3",
     "eslint-config-cycle": "^3.2.0",
     "eslint-plugin-cycle": "^1.0.2",

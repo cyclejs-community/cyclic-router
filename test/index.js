@@ -1,5 +1,5 @@
 /* eslint max-nested-callbacks: 0 */
-import {describe, it} from 'mocha'
+/*global describe, it */
 import assert from 'assert'
 import {Observable} from 'rx'
 import {makeHistoryDriver, createServerHistory} from 'cyclic-history'
