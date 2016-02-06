@@ -23,6 +23,10 @@ For API documentation pleave visit this link [here](http://tylors.github.io/cycl
 
 ## Getting started
 
+## Example
+
+The example found in the repo can be taken for a test-driver [here](http://tylors.github.io/cyclic-router/example)
+
 ###1.
 
 Here is a rundown of the `example` provided with this repo in the folder `/example`. This should allow a better understanding of how to use cyclic-router, for simplicity the styling has been removed here.
