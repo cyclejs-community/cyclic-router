@@ -21,11 +21,11 @@ var makeRouterDriver = require('cyclic-router').makeRouterDriver
 
 For API documentation pleave visit this link [here](http://tylors.github.io/cyclic-router/docs/)
 
-## Getting started
-
 ## Example
 
-The example found in the repo can be taken for a test-driver [here](http://tylors.github.io/cyclic-router/example)
+The example found in the repo can be taken for a test-drive [here](http://tylors.github.io/cyclic-router/example)
+
+## Getting started
 
 ###1.
 
