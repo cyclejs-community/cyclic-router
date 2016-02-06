@@ -19,7 +19,7 @@ var makeRouterDriver = require('cyclic-router').makeRouterDriver
 
 ## API
 
-Api docs comming real soon, please view `Getting started` below to have an understanding of how to implement cyclic-router into your own project.
+For API documentation pleave visit this link [here](http://tylors.github.io/cyclic-router/docs/)
 
 
 ## Getting started
@@ -85,9 +85,9 @@ function App(sources) {
   const {router} = sources // get router out of sources
   const {path$, value$} = router.define(routes) // pass routes into the router
   const sidebar = Sidebar(sources, path$) // pass in sources and path$ into our sidebar
-  
-  // childrenDOM$ takes path$ from `router.define(routes)` above and zips it with values, here is where 
-  // the components swap in reference to the current url, notice router.path(path) is also passed in 
+
+  // childrenDOM$ takes path$ from `router.define(routes)` above and zips it with values, here is where
+  // the components swap in reference to the current url, notice router.path(path) is also passed in
   // for later use in nested routes.
   // This allows components to be nested without ever knowing they are actually nested.
   const childrenDOM$ = path$.zip(value$,
@@ -114,7 +114,7 @@ import {ul, li, a} from 'cycle-snabbdom'
 function Sidebar(sources, path$) {
   // take out createHref from our sources
   const {router: {createHref}} = sources
-  
+
   // here the urls we want to use are passed into createHref.
   // createHref() will always create the proper href no matter how far it is nested within a hierarchy.
   const inboxHref = createHref('/inbox')
@@ -129,7 +129,7 @@ function Sidebar(sources, path$) {
       li([a({props: {href: contactHref}}, 'Contacts')]),
     ])
   })
-  
+
   return {DOM: view$}
 }
 
