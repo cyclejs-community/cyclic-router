@@ -194,3 +194,13 @@ function Inbox(sources) {
 
 export default Inbox
 ```
+
+### Route Parameters
+
+You can pass route parameters to your component by adding them to the component sources.
+
+```js
+const routes = {
+  '/:id': id => sources => YourComponent({props$: Observable.of({id}), ...sources})
+}
+```
