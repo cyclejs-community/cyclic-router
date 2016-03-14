@@ -12,11 +12,10 @@
   "author": "Tylor Steinberger <tlsteinberger167@gmail.com> (github.com/TylorS)",
   "license": "MIT",
   "dependencies": {
-    "@cycle/core": "^6.0.2",
-    "cycle-snabbdom": "^1.0.3",
-    "cyclic-history": "^0.1.0",
-    "history": "^1.17.0",
-    "rx": "^4.0.7"
+    "@cycle/core": "^6.0.3",
+    "cycle-snabbdom": "^1.2.0",
+    "history": "^2.0.1",
+    "rx": "^4.1.0"
   },
   "devDependencies": {
     "babel-plugin-syntax-object-rest-spread": "^6.3.13",

@@ -5,89 +5,75 @@ var Rx = require("rx");
 
 function makeSinkProxies(drivers) {
   var sinkProxies = {};
-  for (var _name in drivers) {
-    if (drivers.hasOwnProperty(_name)) {
-      sinkProxies[_name] = new Rx.ReplaySubject(1);
-    }
+  var keys = Object.keys(drivers);
+  for (var i = 0; i < keys.length; i++) {
+    sinkProxies[keys[i]] = new Rx.ReplaySubject(1);
   }
   return sinkProxies;
 }
 
 function callDrivers(drivers, sinkProxies) {
   var sources = {};
-  for (var _name2 in drivers) {
-    if (drivers.hasOwnProperty(_name2)) {
-      sources[_name2] = drivers[_name2](sinkProxies[_name2], _name2);
-    }
+  var keys = Object.keys(drivers);
+  for (var i = 0; i < keys.length; i++) {
+    var _name = keys[i];
+    sources[_name] = drivers[_name](sinkProxies[_name], _name);
   }
   return sources;
 }
 
 function attachDisposeToSinks(sinks, replicationSubscription) {
-  Object.defineProperty(sinks, "dispose", {
-    enumerable: false,
+  return Object.defineProperty(sinks, "dispose", {
     value: function value() {
       replicationSubscription.dispose();
     }
   });
-  return sinks;
 }
 
 function makeDisposeSources(sources) {
   return function dispose() {
-    for (var _name3 in sources) {
-      if (sources.hasOwnProperty(_name3) && typeof sources[_name3].dispose === "function") {
-        sources[_name3].dispose();
+    var keys = Object.keys(sources);
+    for (var i = 0; i < keys.length; i++) {
+      var source = sources[keys[i]];
+      if (typeof source.dispose === "function") {
+        source.dispose();
       }
     }
   };
 }
 
 function attachDisposeToSources(sources) {
-  Object.defineProperty(sources, "dispose", {
-    enumerable: false,
+  return Object.defineProperty(sources, "dispose", {
     value: makeDisposeSources(sources)
   });
-  return sources;
 }
 
-function logToConsoleError(err) {
-  var target = err.stack || err;
-  if (console && console.error) {
-    console.error(target);
-  }
-}
+var logToConsoleError = typeof console !== "undefined" && console.error ? function (error) {
+  console.error(error.stack || error);
+} : Function.prototype;
 
 function replicateMany(observables, subjects) {
   return Rx.Observable.create(function (observer) {
     var subscription = new Rx.CompositeDisposable();
     setTimeout(function () {
-      for (var _name4 in observables) {
-        if (observables.hasOwnProperty(_name4) && subjects.hasOwnProperty(_name4) && !subjects[_name4].isDisposed) {
-          subscription.add(observables[_name4].doOnError(logToConsoleError).subscribe(subjects[_name4].asObserver()));
+      var keys = Object.keys(observables);
+      for (var i = 0; i < keys.length; i++) {
+        var _name2 = keys[i];
+        if (subjects.hasOwnProperty(_name2) && !subjects[_name2].isDisposed) {
+          subscription.add(observables[_name2].doOnError(logToConsoleError).subscribe(subjects[_name2].asObserver()));
         }
       }
       observer.onNext(subscription);
-    }, 1);
+    });
 
     return function dispose() {
       subscription.dispose();
-      for (var x in subjects) {
-        if (subjects.hasOwnProperty(x)) {
-          subjects[x].dispose();
-        }
+      var keys = Object.keys(subjects);
+      for (var i = 0; i < keys.length; i++) {
+        subjects[keys[i]].dispose();
       }
     };
   });
-}
-
-function isObjectEmpty(obj) {
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function run(main, drivers) {
@@ -97,7 +83,7 @@ function run(main, drivers) {
   if (typeof drivers !== "object" || drivers === null) {
     throw new Error("Second argument given to Cycle.run() must be an object " + "with driver functions as properties.");
   }
-  if (isObjectEmpty(drivers)) {
+  if (Object.keys(drivers).length === 0) {
     throw new Error("Second argument given to Cycle.run() must be an object " + "with at least one driver function declared as a property.");
   }
 
@@ -134,7 +120,7 @@ var Cycle = {
 };
 
 module.exports = Cycle;
-},{"rx":68}],2:[function(require,module,exports){
+},{"rx":62}],2:[function(require,module,exports){
 /*!
  * Cross-Browser Split 1.1.1
  * Copyright 2007-2012 Steven Levithan <stevenlevithan.com>
@@ -254,14 +240,14 @@ var _fromEvent = require('./fromEvent');
 
 var _select = require('./select');
 
-var matchesSelector = undefined;
+var matchesSelector = void 0;
 try {
   matchesSelector = require('matches-selector');
 } catch (e) {
   matchesSelector = function matchesSelector() {};
 }
 
-var eventTypesThatDontBubble = ['load', 'unload', 'focus', 'blur', 'mouseenter', 'mouseleave', 'submit', 'change', 'reset'];
+var eventTypesThatDontBubble = ['load', 'unload', 'focus', 'blur', 'mouseenter', 'mouseleave', 'submit', 'change', 'reset', 'timeupdate', 'playing', 'waiting', 'seeking', 'seeked', 'ended', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'durationchange', 'play', 'pause', 'ratechange', 'volumechange', 'suspend', 'emptied', 'stalled'];
 
 function maybeMutateEventPropagationAttributes(event) {
   if (!event.hasOwnProperty('propagationHasBeenStopped')) {
@@ -312,13 +298,9 @@ function makeSimulateBubbling(namespace, rootEl) {
   };
 }
 
-var defaults = {
-  useCapture: false
-};
-
 function makeEventsSelector(rootElement$, namespace) {
   return function eventsSelector(type) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? defaults : arguments[1];
+    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
     if (typeof type !== 'string') {
       throw new Error('DOM driver\'s events() expects argument to be a ' + 'string representing the event type to listen for.');
@@ -342,7 +324,7 @@ function makeEventsSelector(rootElement$, namespace) {
 }
 
 exports.makeEventsSelector = makeEventsSelector;
-},{"./fromEvent":4,"./select":14,"matches-selector":65}],4:[function(require,module,exports){
+},{"./fromEvent":4,"./select":12,"matches-selector":59}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -414,7 +396,7 @@ function fromEvent(element, eventName) {
 }
 
 exports.fromEvent = fromEvent;
-},{"rx":68}],5:[function(require,module,exports){
+},{"rx":62}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -488,7 +470,7 @@ function h(sel, b, c) {
 /* eslint-enable */
 
 exports.default = h;
-},{"snabbdom/is":79,"snabbdom/vnode":86}],6:[function(require,module,exports){
+},{"snabbdom/is":74,"snabbdom/vnode":83}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -729,7 +711,7 @@ exports.video = video;
 exports.makeDOMDriver = _makeDOMDriver.makeDOMDriver;
 exports.mockDOMSource = _mockDOMSource.mockDOMSource;
 exports.makeHTMLDriver = _makeHTMLDriver.makeHTMLDriver;
-},{"./hyperscript":5,"./makeDOMDriver":8,"./makeHTMLDriver":9,"./mockDOMSource":10,"./modules":12,"hyperscript-helpers":45,"snabbdom/thunk":85}],7:[function(require,module,exports){
+},{"./hyperscript":5,"./makeDOMDriver":8,"./makeHTMLDriver":9,"./mockDOMSource":10,"./modules":11,"hyperscript-helpers":38,"snabbdom/thunk":82}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -762,7 +744,7 @@ var isolateSink = function isolateSink(sink, scope) {
 
 exports.isolateSink = isolateSink;
 exports.isolateSource = isolateSource;
-},{"./utils":16}],8:[function(require,module,exports){
+},{"./utils":14}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -814,6 +796,7 @@ function makeVNodeWrapper(rootElement) {
     var vNodeDataProps = _vNodeData$props === undefined ? {} : _vNodeData$props;
     var _vNodeDataProps$id = vNodeDataProps.id;
     var vNodeId = _vNodeDataProps$id === undefined ? selectorId : _vNodeDataProps$id;
+
 
     var isVNodeAndRootElementIdentical = vNodeId.toUpperCase() === rootElement.id.toUpperCase() && selectorTagName.toUpperCase() === rootElement.tagName.toUpperCase() && vNodeClassName.toUpperCase() === rootElement.className.toUpperCase();
 
@@ -896,7 +879,7 @@ function makeDOMDriver(container) {
 }
 
 exports.makeDOMDriver = makeDOMDriver;
-},{"./events":3,"./isolate":7,"./modules":12,"./select":14,"./transposition":15,"./utils":16,"snabbdom":84,"snabbdom-selector/lib/classNameFromVNode":69,"snabbdom-selector/lib/selectorParser":70,"snabbdom/h":78}],9:[function(require,module,exports){
+},{"./events":3,"./isolate":7,"./modules":11,"./select":12,"./transposition":13,"./utils":14,"snabbdom":81,"snabbdom-selector/lib/classNameFromVNode":63,"snabbdom-selector/lib/selectorParser":64,"snabbdom/h":72}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -936,7 +919,7 @@ function makeHTMLDriver() {
 }
 
 exports.makeHTMLDriver = makeHTMLDriver;
-},{"./transposition":15,"rx":68,"snabbdom-to-html":72}],10:[function(require,module,exports){
+},{"./transposition":13,"rx":62,"snabbdom-to-html":66}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -963,225 +946,44 @@ function getEventsStreamForSelector(mockedEventTypes) {
   };
 }
 
+function makeMockSelector(mockedSelectors) {
+  return function select(selector) {
+    for (var key in mockedSelectors) {
+      if (mockedSelectors.hasOwnProperty(key) && key === selector) {
+        var observable = emptyStream;
+        if (mockedSelectors[key].hasOwnProperty('observable')) {
+          observable = mockedSelectors[key].observable;
+        }
+        return {
+          observable: observable,
+          select: makeMockSelector(mockedSelectors[key]),
+          events: getEventsStreamForSelector(mockedSelectors[key])
+        };
+      }
+    }
+    return {
+      observable: emptyStream,
+      events: function events() {
+        return emptyStream;
+      }
+    };
+  };
+}
+
 function mockDOMSource() {
   var mockedSelectors = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
   return {
-    select: function select(selector) {
-      for (var key in mockedSelectors) {
-        if (mockedSelectors.hasOwnProperty(key) && key === selector) {
-          return {
-            observable: emptyStream,
-            events: getEventsStreamForSelector(mockedSelectors[key])
-          };
-        }
-      }
-      return {
-        observable: emptyStream,
-        events: function events() {
-          return emptyStream;
-        }
-      };
+    observable: emptyStream,
+    select: makeMockSelector(mockedSelectors),
+    events: function events() {
+      return emptyStream;
     }
   };
 }
 
 exports.mockDOMSource = mockDOMSource;
-},{"rx":68}],11:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var raf = undefined;
-if (typeof window !== 'undefined') {
-  raf = window && window.requestAnimationFrame || setTimeout;
-} else {
-  raf = setTimeout;
-}
-
-var nextFrame = function nextFrame(fn) {
-  return raf(function () {
-    return raf(fn);
-  });
-};
-/* eslint-disable */
-function setNextFrame(obj, prop, val) {
-  nextFrame(function () {
-    obj[prop] = val;
-  });
-}
-
-function getTextNodeRect(textNode) {
-  var rect = undefined;
-  if (document.createRange) {
-    var range = document.createRange();
-    range.selectNodeContents(textNode);
-    if (range.getBoundingClientRect) {
-      rect = range.getBoundingClientRect();
-    }
-  }
-  return rect;
-}
-
-function calcTransformOrigin(isTextNode, textRect, boundingRect) {
-  if (isTextNode) {
-    if (textRect) {
-      //calculate pixels to center of text from left edge of bounding box
-      var relativeCenterX = textRect.left + textRect.width / 2 - boundingRect.left;
-      var relativeCenterY = textRect.top + textRect.height / 2 - boundingRect.top;
-      return relativeCenterX + 'px ' + relativeCenterY + 'px';
-    }
-  }
-  return '0 0'; //top left
-}
-
-function getTextDx(oldTextRect, newTextRect) {
-  if (oldTextRect && newTextRect) {
-    return oldTextRect.left + oldTextRect.width / 2 - (newTextRect.left + newTextRect.width / 2);
-  }
-  return 0;
-}
-
-function getTextDy(oldTextRect, newTextRect) {
-  if (oldTextRect && newTextRect) {
-    return oldTextRect.top + oldTextRect.height / 2 - (newTextRect.top + newTextRect.height / 2);
-  }
-  return 0;
-}
-
-function isTextElement(elm) {
-  return elm.childNodes.length === 1 && elm.childNodes[0].nodeType === 3;
-}
-
-var removed = undefined,
-    created = undefined;
-
-function pre(oldVnode, vnode) {
-  removed = {};
-  created = [];
-}
-
-function create(oldVnode, vnode) {
-  var hero = vnode.data.hero;
-  if (hero && hero.id) {
-    created.push(hero.id);
-    created.push(vnode);
-  }
-}
-
-function destroy(vnode) {
-  var hero = vnode.data.hero;
-  if (hero && hero.id) {
-    var elm = vnode.elm;
-    vnode.isTextNode = isTextElement(elm); //is this a text node?
-    vnode.boundingRect = elm.getBoundingClientRect(); //save the bounding rectangle to a new property on the vnode
-    vnode.textRect = vnode.isTextNode ? getTextNodeRect(elm.childNodes[0]) : null; //save bounding rect of inner text node
-    var computedStyle = window.getComputedStyle(elm, null); //get current styles (includes inherited properties)
-    vnode.savedStyle = JSON.parse(JSON.stringify(computedStyle)); //save a copy of computed style values
-    removed[hero.id] = vnode;
-  }
-}
-
-function post() {
-  var i = undefined,
-      id = undefined,
-      newElm = undefined,
-      oldVnode = undefined,
-      oldElm = undefined,
-      hRatio = undefined,
-      wRatio = undefined,
-      oldRect = undefined,
-      newRect = undefined,
-      dx = undefined,
-      dy = undefined,
-      origTransform = undefined,
-      origTransition = undefined,
-      newStyle = undefined,
-      oldStyle = undefined,
-      newComputedStyle = undefined,
-      isTextNode = undefined,
-      newTextRect = undefined,
-      oldTextRect = undefined;
-  for (i = 0; i < created.length; i += 2) {
-    id = created[i];
-    newElm = created[i + 1].elm;
-    oldVnode = removed[id];
-    if (oldVnode) {
-      isTextNode = oldVnode.isTextNode && isTextElement(newElm); //Are old & new both text?
-      newStyle = newElm.style;
-      newComputedStyle = window.getComputedStyle(newElm, null); //get full computed style for new element
-      oldElm = oldVnode.elm;
-      oldStyle = oldElm.style;
-      //Overall element bounding boxes
-      newRect = newElm.getBoundingClientRect();
-      oldRect = oldVnode.boundingRect; //previously saved bounding rect
-      //Text node bounding boxes & distances
-      if (isTextNode) {
-        newTextRect = getTextNodeRect(newElm.childNodes[0]);
-        oldTextRect = oldVnode.textRect;
-        dx = getTextDx(oldTextRect, newTextRect);
-        dy = getTextDy(oldTextRect, newTextRect);
-      } else {
-        //Calculate distances between old & new positions
-        dx = oldRect.left - newRect.left;
-        dy = oldRect.top - newRect.top;
-      }
-      hRatio = newRect.height / Math.max(oldRect.height, 1);
-      wRatio = isTextNode ? hRatio : newRect.width / Math.max(oldRect.width, 1); //text scales based on hRatio
-      // Animate new element
-      origTransform = newStyle.transform;
-      origTransition = newStyle.transition;
-      if (newComputedStyle.display === 'inline') //inline elements cannot be transformed
-        newStyle.display = 'inline-block'; //this does not appear to have any negative side effects
-      newStyle.transition = origTransition + 'transform 0s';
-      newStyle.transformOrigin = calcTransformOrigin(isTextNode, newTextRect, newRect);
-      newStyle.opacity = '0';
-      newStyle.transform = origTransform + 'translate(' + dx + 'px, ' + dy + 'px) ' + 'scale(' + 1 / wRatio + ', ' + 1 / hRatio + ')';
-      setNextFrame(newStyle, 'transition', origTransition);
-      setNextFrame(newStyle, 'transform', origTransform);
-      setNextFrame(newStyle, 'opacity', '1');
-      // Animate old element
-      for (var key in oldVnode.savedStyle) {
-        //re-apply saved inherited properties
-        if (parseInt(key) != key) {
-          var ms = key.substring(0, 2) === 'ms';
-          var moz = key.substring(0, 3) === 'moz';
-          var webkit = key.substring(0, 6) === 'webkit';
-          if (!ms && !moz && !webkit) //ignore prefixed style properties
-            oldStyle[key] = oldVnode.savedStyle[key];
-        }
-      }
-      oldStyle.position = 'absolute';
-      oldStyle.top = oldRect.top + 'px'; //start at existing position
-      oldStyle.left = oldRect.left + 'px';
-      oldStyle.width = oldRect.width + 'px'; //Needed for elements who were sized relative to their parents
-      oldStyle.height = oldRect.height + 'px'; //Needed for elements who were sized relative to their parents
-      oldStyle.margin = 0; //Margin on hero element leads to incorrect positioning
-      oldStyle.transformOrigin = calcTransformOrigin(isTextNode, oldTextRect, oldRect);
-      oldStyle.transform = '';
-      oldStyle.opacity = '1';
-      document.body.appendChild(oldElm);
-      setNextFrame(oldStyle, 'transform', 'translate(' + -dx + 'px, ' + -dy + 'px) scale(' + wRatio + ', ' + hRatio + ')'); //scale must be on far right for translate to be correct
-      setNextFrame(oldStyle, 'opacity', '0');
-      oldElm.addEventListener('transitionend', function (ev) {
-        if (ev.propertyName === 'transform') document.body.removeChild(ev.target);
-      });
-    }
-  }
-  removed = created = undefined;
-}
-/* eslint-enable */
-
-var HeroModule = {
-  pre: pre,
-  create: create,
-  destroy: destroy,
-  post: post
-};
-
-exports.HeroModule = HeroModule;
-},{}],12:[function(require,module,exports){
+},{"rx":62}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1205,122 +1007,24 @@ var _eventlisteners = require('snabbdom/modules/eventlisteners');
 
 var _eventlisteners2 = _interopRequireDefault(_eventlisteners);
 
-var _styleModule = require('./style-module');
+var _style = require('snabbdom/modules/style');
 
-var _heroModule = require('./hero-module');
+var _style2 = _interopRequireDefault(_style);
+
+var _hero = require('snabbdom/modules/hero');
+
+var _hero2 = _interopRequireDefault(_hero);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = [_styleModule.StyleModule, _class2.default, _props2.default, _attributes2.default];
-exports.StyleModule = _styleModule.StyleModule;
+exports.default = [_style2.default, _class2.default, _props2.default, _attributes2.default];
+exports.StyleModule = _style2.default;
 exports.ClassModule = _class2.default;
 exports.PropsModule = _props2.default;
 exports.AttrsModule = _attributes2.default;
-exports.HeroModule = _heroModule.HeroModule;
+exports.HeroModule = _hero2.default;
 exports.EventsModule = _eventlisteners2.default;
-},{"./hero-module":11,"./style-module":13,"snabbdom/modules/attributes":80,"snabbdom/modules/class":81,"snabbdom/modules/eventlisteners":82,"snabbdom/modules/props":83}],13:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var raf = undefined;
-if (typeof window !== 'undefined') {
-  raf = window && window.requestAnimationFrame || setTimeout;
-} else {
-  raf = setTimeout;
-}
-
-var nextFrame = function nextFrame(fn) {
-  return raf(function () {
-    return raf(fn);
-  });
-};
-
-function setNextFrame(obj, prop, val) {
-  nextFrame(function () {
-    obj[prop] = val;
-  });
-}
-/* eslint-disable */
-function updateStyle(oldVnode, vnode) {
-  var cur = undefined,
-      name = undefined,
-      elm = vnode.elm,
-      oldStyle = oldVnode.data.style || {},
-      style = vnode.data.style || {},
-      oldHasDel = 'delayed' in oldStyle;
-  for (name in oldStyle) {
-    if (!style[name]) {
-      elm.style[name] = '';
-    }
-  }
-  for (name in style) {
-    cur = style[name];
-    if (name === 'delayed') {
-      for (name in style.delayed) {
-        cur = style.delayed[name];
-        if (!oldHasDel || cur !== oldStyle.delayed[name]) {
-          setNextFrame(elm.style, name, cur);
-        }
-      }
-    } else if (name !== 'remove' && cur !== oldStyle[name]) {
-      elm.style[name] = cur;
-    }
-  }
-}
-
-function applyDestroyStyle(vnode) {
-  var style = undefined,
-      name = undefined,
-      elm = vnode.elm,
-      s = vnode.data.style;
-  if (!s || !(style = s.destroy)) return;
-  for (name in style) {
-    elm.style[name] = style[name];
-  }
-}
-
-function applyRemoveStyle(vnode, rm) {
-  var s = vnode.data.style;
-  if (!s || !s.remove) {
-    rm();
-    return;
-  }
-  var name = undefined,
-      elm = vnode.elm,
-      idx = undefined,
-      i = 0,
-      maxDur = 0,
-      compStyle = undefined,
-      style = s.remove,
-      amount = 0,
-      applied = [];
-  for (name in style) {
-    applied.push(name);
-    elm.style[name] = style[name];
-  }
-  compStyle = getComputedStyle(elm);
-  var props = compStyle['transition-property'].split(', ');
-  for (; i < props.length; ++i) {
-    if (applied.indexOf(props[i]) !== -1) amount++;
-  }
-  elm.addEventListener('transitionend', function (ev) {
-    if (ev.target === elm) --amount;
-    if (amount === 0) rm();
-  });
-}
-/* eslint-enable */
-
-var StyleModule = {
-  create: updateStyle,
-  update: updateStyle,
-  destroy: applyDestroyStyle,
-  remove: applyRemoveStyle
-};
-
-exports.StyleModule = StyleModule;
-},{}],14:[function(require,module,exports){
+},{"snabbdom/modules/attributes":75,"snabbdom/modules/class":76,"snabbdom/modules/eventlisteners":77,"snabbdom/modules/hero":78,"snabbdom/modules/props":79,"snabbdom/modules/style":80}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1342,17 +1046,74 @@ function makeIsStrictlyInRootScope(namespace) {
     return matched && namespace.indexOf('.' + c) !== -1;
   };
   return function isStrictlyInRootScope(leaf) {
+    var some = Array.prototype.some;
+    var split = String.prototype.split;
     for (var el = leaf; el; el = el.parentElement) {
-      var split = String.prototype.split;
       var classList = el.classList || split.call(el.className, ' ');
-      if (Array.prototype.some.call(classList, classIsDomestic)) {
+      if (some.call(classList, classIsDomestic)) {
         return true;
       }
-      if (Array.prototype.some.call(classList, classIsForeign)) {
+      if (some.call(classList, classIsForeign)) {
         return false;
       }
     }
     return true;
+  };
+}
+
+var isValidString = function isValidString(param) {
+  return typeof param === 'string' && param.length > 0;
+};
+
+var contains = function contains(str, match) {
+  return str.indexOf(match) > -1;
+};
+
+var isNotTagName = function isNotTagName(param) {
+  return isValidString(param) && contains(param, '.') || contains(param, '#') || contains(param, ':');
+};
+
+function sortNamespace(a, b) {
+  if (isNotTagName(a) && isNotTagName(b)) {
+    return 0;
+  }
+  return isNotTagName(a) ? 1 : -1;
+}
+
+function removeDuplicates(arr) {
+  var newArray = [];
+  arr.forEach(function (element) {
+    if (newArray.indexOf(element) === -1) {
+      newArray.push(element);
+    }
+  });
+  return newArray;
+}
+
+var getScope = function getScope(namespace) {
+  return namespace.filter(function (c) {
+    return c.indexOf('.cycle-scope') > -1;
+  });
+};
+
+function makeFindElements(namespace) {
+  return function findElements(rootElement) {
+    if (namespace.join('') === '') {
+      return rootElement;
+    }
+    var slice = Array.prototype.slice;
+
+    var scope = getScope(namespace);
+    // Uses global selector && is isolated
+    if (namespace.indexOf('*') > -1 && scope.length > 0) {
+      // grab top-level boundary of scope
+      var topNode = rootElement.querySelector(scope.join(' '));
+      // grab all children
+      var childNodes = topNode.getElementsByTagName('*');
+      return removeDuplicates([topNode].concat(slice.call(childNodes))).filter(makeIsStrictlyInRootScope(namespace));
+    }
+
+    return removeDuplicates(slice.call(rootElement.querySelectorAll(namespace.join(' '))).concat(slice.call(rootElement.querySelectorAll(namespace.join(''))))).filter(makeIsStrictlyInRootScope(namespace));
   };
 }
 
@@ -1364,20 +1125,10 @@ function makeElementSelector(rootElement$) {
 
     var namespace = this.namespace;
     var trimmedSelector = selector.trim();
-    var childNamespace = trimmedSelector === ':root' ? namespace : namespace.concat(trimmedSelector);
-    var element$ = rootElement$.map(function (rootEl) {
-      if (childNamespace.join('') === '') {
-        return rootEl;
-      }
-      var nodeList = rootEl.querySelectorAll(childNamespace.join(' '));
-      if (nodeList.length === 0) {
-        nodeList = rootEl.querySelectorAll(childNamespace.join(''));
-      }
-      var array = Array.prototype.slice.call(nodeList);
-      return array.filter(makeIsStrictlyInRootScope(childNamespace));
-    });
+    var childNamespace = trimmedSelector === ':root' ? namespace : namespace.concat(trimmedSelector).sort(sortNamespace);
+
     return {
-      observable: element$,
+      observable: rootElement$.map(makeFindElements(childNamespace)),
       namespace: childNamespace,
       select: makeElementSelector(rootElement$),
       events: (0, _events.makeEventsSelector)(rootElement$, childNamespace),
@@ -1389,7 +1140,7 @@ function makeElementSelector(rootElement$) {
 
 exports.makeElementSelector = makeElementSelector;
 exports.makeIsStrictlyInRootScope = makeIsStrictlyInRootScope;
-},{"./events":3,"./isolate":7}],15:[function(require,module,exports){
+},{"./events":3,"./isolate":7}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1443,7 +1194,7 @@ function transposeVTree(vTree) {
 }
 
 exports.transposeVTree = transposeVTree;
-},{"rx":68}],16:[function(require,module,exports){
+},{"rx":62}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1468,164 +1219,7 @@ var domSelectorParser = function domSelectorParser(selectors) {
 
 exports.domSelectorParser = domSelectorParser;
 exports.SCOPE_PREFIX = SCOPE_PREFIX;
-},{}],17:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _makeHistoryDriver = require('./makeHistoryDriver');
-
-Object.defineProperty(exports, 'makeHistoryDriver', {
-  enumerable: true,
-  get: function get() {
-    return _makeHistoryDriver.makeHistoryDriver;
-  }
-});
-
-var _util = require('./util');
-
-Object.defineProperty(exports, 'supportsHistory', {
-  enumerable: true,
-  get: function get() {
-    return _util.supportsHistory;
-  }
-});
-Object.defineProperty(exports, 'createLocation', {
-  enumerable: true,
-  get: function get() {
-    return _util.createLocation;
-  }
-});
-
-var _serverHistory = require('./serverHistory');
-
-Object.defineProperty(exports, 'createServerHistory', {
-  enumerable: true,
-  get: function get() {
-    return _serverHistory.createServerHistory;
-  }
-});
-},{"./makeHistoryDriver":18,"./serverHistory":19,"./util":20}],18:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.makeHistoryDriver = undefined;
-
-var _rx = require('rx');
-
-function makePushState(history) {
-  return function pushState(url) {
-    if ('string' === typeof url || 'object' === (typeof url === 'undefined' ? 'undefined' : _typeof(url))) {
-      history.push(url);
-    } else {
-      throw new Error('History Driver input must be a string or\n        object but received ' + (typeof url === 'undefined' ? 'undefined' : _typeof(url)));
-    }
-  };
-}
-
-function makeHistoryDriver(history) {
-  if (!history || (typeof history === 'undefined' ? 'undefined' : _typeof(history)) !== 'object' || typeof history.listen !== 'function') {
-    throw new Error('First argument to makeHistoryDriver must be a valid ' + 'history instance with a listen() method');
-  }
-  return function historyDriver(sink$) {
-    var history$ = new _rx.ReplaySubject(1);
-    history.listen(function (location) {
-      return history$.onNext(location);
-    });
-
-    sink$.subscribe(makePushState(history));
-    history$.createHref = history.createHref;
-    return history$;
-  };
-}
-
-exports.makeHistoryDriver = makeHistoryDriver;
-},{"rx":68}],19:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createServerHistory = undefined;
-
-var _util = require('./util');
-
-function ServerHistory() {
-  this.listeners = [];
-}
-
-ServerHistory.prototype.listen = function listen(listener) {
-  this.listeners.push(listener);
-};
-
-ServerHistory.prototype.push = function push(location) {
-  var listeners = this.listeners;
-  if (!listeners || listeners.length === 0) {
-    throw new Error('There is no active listener');
-  }
-  listeners.forEach(function (l) {
-    return l((0, _util.createLocation)(location));
-  });
-};
-
-ServerHistory.prototype.createHref = function createHref(path) {
-  return path;
-};
-
-ServerHistory.prototype.createLocation = _util.createLocation;
-
-function createServerHistory() {
-  return new ServerHistory();
-}
-
-exports.createServerHistory = createServerHistory;
-},{"./util":20}],20:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-function supportsHistory() {
-  var ua = navigator.userAgent;
-
-  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
-    return false;
-  }
-
-  if (typeof window !== 'undefined') {
-    return window.history && 'pushState' in window.history;
-  } else {
-    return false;
-  }
-}
-
-var locationDefaults = {
-  pathname: '/',
-  action: 'POP',
-  hash: '',
-  search: '',
-  state: null,
-  key: null
-};
-
-function createLocation() {
-  var location = arguments.length <= 0 || arguments[0] === undefined ? locationDefaults : arguments[0];
-
-  if (typeof location === 'string') {
-    return Object.assign(locationDefaults, { pathname: location });
-  }
-  return Object.assign(locationDefaults, location);
-}
-
-exports.supportsHistory = supportsHistory;
-exports.createLocation = createLocation;
-},{}],21:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var pSlice = Array.prototype.slice;
 var objectKeys = require('./lib/keys.js');
 var isArguments = require('./lib/is_arguments.js');
@@ -1721,7 +1315,7 @@ function objEquiv(a, b, opts) {
   return typeof a === typeof b;
 }
 
-},{"./lib/is_arguments.js":22,"./lib/keys.js":23}],22:[function(require,module,exports){
+},{"./lib/is_arguments.js":16,"./lib/keys.js":17}],16:[function(require,module,exports){
 var supportsArgumentsClass = (function(){
   return Object.prototype.toString.call(arguments)
 })() == '[object Arguments]';
@@ -1743,7 +1337,7 @@ function unsupported(object){
     false;
 };
 
-},{}],23:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 exports = module.exports = typeof Object.keys === 'function'
   ? Object.keys : shim;
 
@@ -1754,7 +1348,7 @@ function shim (obj) {
   return keys;
 }
 
-},{}],24:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
  * Indicates that navigation was caused by a call to history.push.
  */
@@ -1786,34 +1380,66 @@ exports['default'] = {
   REPLACE: REPLACE,
   POP: POP
 };
-},{}],25:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
+var _slice = Array.prototype.slice;
 exports.loopAsync = loopAsync;
 
 function loopAsync(turns, work, callback) {
-  var currentTurn = 0;
-  var isDone = false;
+  var currentTurn = 0,
+      isDone = false;
+  var sync = false,
+      hasNext = false,
+      doneArgs = undefined;
 
   function done() {
     isDone = true;
+    if (sync) {
+      // Iterate instead of recursing if possible.
+      doneArgs = [].concat(_slice.call(arguments));
+      return;
+    }
+
     callback.apply(this, arguments);
   }
 
   function next() {
-    if (isDone) return;
+    if (isDone) {
+      return;
+    }
 
-    if (currentTurn < turns) {
+    hasNext = true;
+    if (sync) {
+      // Iterate instead of recursing if possible.
+      return;
+    }
+
+    sync = true;
+
+    while (!isDone && currentTurn < turns && hasNext) {
+      hasNext = false;
       work.call(this, currentTurn++, next, done);
-    } else {
-      done.apply(this, arguments);
+    }
+
+    sync = false;
+
+    if (isDone) {
+      // This means the loop finished synchronously.
+      callback.apply(this, doneArgs);
+      return;
+    }
+
+    if (currentTurn >= turns && hasNext) {
+      isDone = true;
+      callback();
     }
   }
 
   next();
 }
-},{}],26:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function (process){
 /*eslint-disable no-empty */
 'use strict';
@@ -1829,7 +1455,8 @@ var _warning = require('warning');
 var _warning2 = _interopRequireDefault(_warning);
 
 var KeyPrefix = '@@History/';
-var QuotaExceededError = 'QuotaExceededError';
+var QuotaExceededErrors = ['QuotaExceededError', 'QUOTA_EXCEEDED_ERR'];
+
 var SecurityError = 'SecurityError';
 
 function createKey(key) {
@@ -1838,7 +1465,11 @@ function createKey(key) {
 
 function saveState(key, state) {
   try {
-    window.sessionStorage.setItem(createKey(key), JSON.stringify(state));
+    if (state == null) {
+      window.sessionStorage.removeItem(createKey(key));
+    } else {
+      window.sessionStorage.setItem(createKey(key), JSON.stringify(state));
+    }
   } catch (error) {
     if (error.name === SecurityError) {
       // Blocking cookies in Chrome/Firefox/Safari throws SecurityError on any
@@ -1848,7 +1479,7 @@ function saveState(key, state) {
       return;
     }
 
-    if (error.name === QuotaExceededError && window.sessionStorage.length === 0) {
+    if (QuotaExceededErrors.indexOf(error.name) >= 0 && window.sessionStorage.length === 0) {
       // Safari "private mode" throws QuotaExceededError.
       process.env.NODE_ENV !== 'production' ? _warning2['default'](false, '[history] Unable to save state; sessionStorage is not available in Safari private mode') : undefined;
 
@@ -1884,7 +1515,7 @@ function readState(key) {
   return null;
 }
 }).call(this,require('_process'))
-},{"_process":66,"warning":88}],27:[function(require,module,exports){
+},{"_process":60,"warning":85}],21:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1949,11 +1580,6 @@ function supportsHistory() {
   if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
     return false;
   }
-  // FIXME: Work around our browser history not working correctly on Chrome
-  // iOS: https://github.com/rackt/react-router/issues/2565
-  if (ua.indexOf('CriOS') !== -1) {
-    return false;
-  }
   return window.history && 'pushState' in window.history;
 }
 
@@ -1965,13 +1591,63 @@ function supportsGoWithoutReloadUsingHash() {
   var ua = navigator.userAgent;
   return ua.indexOf('Firefox') === -1;
 }
-},{}],28:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
 exports.canUseDOM = canUseDOM;
-},{}],29:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
+(function (process){
+'use strict';
+
+exports.__esModule = true;
+exports.extractPath = extractPath;
+exports.parsePath = parsePath;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
+function extractPath(string) {
+  var match = string.match(/^https?:\/\/[^\/]*/);
+
+  if (match == null) return string;
+
+  return string.substring(match[0].length);
+}
+
+function parsePath(path) {
+  var pathname = extractPath(path);
+  var search = '';
+  var hash = '';
+
+  process.env.NODE_ENV !== 'production' ? _warning2['default'](path === pathname, 'A path must be pathname + search + hash only, not a fully qualified URL like "%s"', path) : undefined;
+
+  var hashIndex = pathname.indexOf('#');
+  if (hashIndex !== -1) {
+    hash = pathname.substring(hashIndex);
+    pathname = pathname.substring(0, hashIndex);
+  }
+
+  var searchIndex = pathname.indexOf('?');
+  if (searchIndex !== -1) {
+    search = pathname.substring(searchIndex);
+    pathname = pathname.substring(0, searchIndex);
+  }
+
+  if (pathname === '') pathname = '/';
+
+  return {
+    pathname: pathname,
+    search: search,
+    hash: hash
+  };
+}
+}).call(this,require('_process'))
+},{"_process":60,"warning":85}],24:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -1987,6 +1663,8 @@ var _invariant2 = _interopRequireDefault(_invariant);
 
 var _Actions = require('./Actions');
 
+var _PathUtils = require('./PathUtils');
+
 var _ExecutionEnvironment = require('./ExecutionEnvironment');
 
 var _DOMUtils = require('./DOMUtils');
@@ -1996,10 +1674,6 @@ var _DOMStateStorage = require('./DOMStateStorage');
 var _createDOMHistory = require('./createDOMHistory');
 
 var _createDOMHistory2 = _interopRequireDefault(_createDOMHistory);
-
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
 
 /**
  * Creates and returns a history object that uses HTML5's history API
@@ -2037,7 +1711,7 @@ function createBrowserHistory() {
       if (isSupported) window.history.replaceState(_extends({}, historyState, { key: key }), null, path);
     }
 
-    var location = _parsePath2['default'](path);
+    var location = _PathUtils.parsePath(path);
 
     return history.createLocation(_extends({}, location, { state: state }), undefined, key);
   }
@@ -2152,7 +1826,7 @@ function createBrowserHistory() {
 exports['default'] = createBrowserHistory;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"./Actions":24,"./DOMStateStorage":26,"./DOMUtils":27,"./ExecutionEnvironment":28,"./createDOMHistory":30,"./parsePath":40,"_process":66,"invariant":46}],30:[function(require,module,exports){
+},{"./Actions":18,"./DOMStateStorage":20,"./DOMUtils":21,"./ExecutionEnvironment":22,"./PathUtils":23,"./createDOMHistory":25,"_process":60,"invariant":39}],25:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2195,7 +1869,7 @@ function createDOMHistory(options) {
 exports['default'] = createDOMHistory;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"./DOMUtils":27,"./ExecutionEnvironment":28,"./createHistory":32,"_process":66,"invariant":46}],31:[function(require,module,exports){
+},{"./DOMUtils":21,"./ExecutionEnvironment":22,"./createHistory":27,"_process":60,"invariant":39}],26:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2215,6 +1889,8 @@ var _invariant2 = _interopRequireDefault(_invariant);
 
 var _Actions = require('./Actions');
 
+var _PathUtils = require('./PathUtils');
+
 var _ExecutionEnvironment = require('./ExecutionEnvironment');
 
 var _DOMUtils = require('./DOMUtils');
@@ -2224,10 +1900,6 @@ var _DOMStateStorage = require('./DOMStateStorage');
 var _createDOMHistory = require('./createDOMHistory');
 
 var _createDOMHistory2 = _interopRequireDefault(_createDOMHistory);
-
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
 
 function isAbsolutePath(path) {
   return typeof path === 'string' && path.charAt(0) === '/';
@@ -2287,7 +1959,7 @@ function createHashHistory() {
       key = state = null;
     }
 
-    var location = _parsePath2['default'](path);
+    var location = _PathUtils.parsePath(path);
 
     return history.createLocation(_extends({}, location, { state: state }), undefined, key);
   }
@@ -2446,8 +2118,8 @@ function createHashHistory() {
 exports['default'] = createHashHistory;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"./Actions":24,"./DOMStateStorage":26,"./DOMUtils":27,"./ExecutionEnvironment":28,"./createDOMHistory":30,"./parsePath":40,"_process":66,"invariant":46,"warning":88}],32:[function(require,module,exports){
-//import warning from 'warning'
+},{"./Actions":18,"./DOMStateStorage":20,"./DOMUtils":21,"./ExecutionEnvironment":22,"./PathUtils":23,"./createDOMHistory":25,"_process":60,"invariant":39,"warning":85}],27:[function(require,module,exports){
+(function (process){
 'use strict';
 
 exports.__esModule = true;
@@ -2456,9 +2128,15 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
 var _deepEqual = require('deep-equal');
 
 var _deepEqual2 = _interopRequireDefault(_deepEqual);
+
+var _PathUtils = require('./PathUtils');
 
 var _AsyncUtils = require('./AsyncUtils');
 
@@ -2471,10 +2149,6 @@ var _createLocation3 = _interopRequireDefault(_createLocation2);
 var _runTransitionHook = require('./runTransitionHook');
 
 var _runTransitionHook2 = _interopRequireDefault(_runTransitionHook);
-
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
 
 var _deprecate = require('./deprecate');
 
@@ -2498,8 +2172,8 @@ function createHistory() {
   var finishTransition = options.finishTransition;
   var saveState = options.saveState;
   var go = options.go;
-  var keyLength = options.keyLength;
   var getUserConfirmation = options.getUserConfirmation;
+  var keyLength = options.keyLength;
 
   if (typeof keyLength !== 'number') keyLength = DefaultKeyLength;
 
@@ -2599,7 +2273,7 @@ function createHistory() {
           var prevPath = createPath(location);
           var nextPath = createPath(nextLocation);
 
-          if (nextPath === prevPath) nextLocation.action = _Actions.REPLACE;
+          if (nextPath === prevPath && _deepEqual2['default'](location.state, nextLocation.state)) nextLocation.action = _Actions.REPLACE;
         }
 
         if (finishTransition(nextLocation) !== false) updateLocation(nextLocation);
@@ -2656,13 +2330,9 @@ function createHistory() {
     var key = arguments.length <= 2 || arguments[2] === undefined ? createKey() : arguments[2];
 
     if (typeof action === 'object') {
-      //warning(
-      //  false,
-      //  'The state (2nd) argument to history.createLocation is deprecated; use a ' +
-      //  'location descriptor instead'
-      //)
+      process.env.NODE_ENV !== 'production' ? _warning2['default'](false, 'The state (2nd) argument to history.createLocation is deprecated; use a ' + 'location descriptor instead') : undefined;
 
-      if (typeof location === 'string') location = _parsePath2['default'](location);
+      if (typeof location === 'string') location = _PathUtils.parsePath(location);
 
       location = _extends({}, location, { state: action });
 
@@ -2702,14 +2372,14 @@ function createHistory() {
 
   // deprecated
   function pushState(state, path) {
-    if (typeof path === 'string') path = _parsePath2['default'](path);
+    if (typeof path === 'string') path = _PathUtils.parsePath(path);
 
     push(_extends({ state: state }, path));
   }
 
   // deprecated
   function replaceState(state, path) {
-    if (typeof path === 'string') path = _parsePath2['default'](path);
+    if (typeof path === 'string') path = _PathUtils.parsePath(path);
 
     replace(_extends({ state: state }, path));
   }
@@ -2738,8 +2408,9 @@ function createHistory() {
 
 exports['default'] = createHistory;
 module.exports = exports['default'];
-},{"./Actions":24,"./AsyncUtils":25,"./createLocation":33,"./deprecate":35,"./parsePath":40,"./runTransitionHook":41,"deep-equal":21}],33:[function(require,module,exports){
-//import warning from 'warning'
+}).call(this,require('_process'))
+},{"./Actions":18,"./AsyncUtils":19,"./PathUtils":23,"./createLocation":28,"./deprecate":30,"./runTransitionHook":34,"_process":60,"deep-equal":15,"warning":85}],28:[function(require,module,exports){
+(function (process){
 'use strict';
 
 exports.__esModule = true;
@@ -2748,11 +2419,13 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
 var _Actions = require('./Actions');
 
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
+var _PathUtils = require('./PathUtils');
 
 function createLocation() {
   var location = arguments.length <= 0 || arguments[0] === undefined ? '/' : arguments[0];
@@ -2761,14 +2434,10 @@ function createLocation() {
 
   var _fourthArg = arguments.length <= 3 || arguments[3] === undefined ? null : arguments[3];
 
-  if (typeof location === 'string') location = _parsePath2['default'](location);
+  if (typeof location === 'string') location = _PathUtils.parsePath(location);
 
   if (typeof action === 'object') {
-    //warning(
-    //  false,
-    //  'The state (2nd) argument to createLocation is deprecated; use a ' +
-    //  'location descriptor instead'
-    //)
+    process.env.NODE_ENV !== 'production' ? _warning2['default'](false, 'The state (2nd) argument to createLocation is deprecated; use a ' + 'location descriptor instead') : undefined;
 
     location = _extends({}, location, { state: action });
 
@@ -2793,7 +2462,8 @@ function createLocation() {
 
 exports['default'] = createLocation;
 module.exports = exports['default'];
-},{"./Actions":24,"./parsePath":40}],34:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"./Actions":18,"./PathUtils":23,"_process":60,"warning":85}],29:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2811,15 +2481,13 @@ var _invariant = require('invariant');
 
 var _invariant2 = _interopRequireDefault(_invariant);
 
+var _PathUtils = require('./PathUtils');
+
 var _Actions = require('./Actions');
 
 var _createHistory = require('./createHistory');
 
 var _createHistory2 = _interopRequireDefault(_createHistory);
-
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
 
 function createStateStorage(entries) {
   return entries.filter(function (entry) {
@@ -2884,23 +2552,24 @@ function createMemoryHistory() {
 
   function getCurrentLocation() {
     var entry = entries[current];
-    var key = entry.key;
     var basename = entry.basename;
     var pathname = entry.pathname;
     var search = entry.search;
 
     var path = (basename || '') + pathname + (search || '');
 
-    var state = undefined;
-    if (key) {
+    var key = undefined,
+        state = undefined;
+    if (entry.key) {
+      key = entry.key;
       state = readState(key);
     } else {
-      state = null;
       key = history.createKey();
+      state = null;
       entry.key = key;
     }
 
-    var location = _parsePath2['default'](path);
+    var location = _PathUtils.parsePath(path);
 
     return history.createLocation(_extends({}, location, { state: state }), undefined, key);
   }
@@ -2951,23 +2620,29 @@ function createMemoryHistory() {
 exports['default'] = createMemoryHistory;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"./Actions":24,"./createHistory":32,"./parsePath":40,"_process":66,"invariant":46,"warning":88}],35:[function(require,module,exports){
-//import warning from 'warning'
-
-"use strict";
+},{"./Actions":18,"./PathUtils":23,"./createHistory":27,"_process":60,"invariant":39,"warning":85}],30:[function(require,module,exports){
+(function (process){
+'use strict';
 
 exports.__esModule = true;
-function deprecate(fn) {
-  return fn;
-  //return function () {
-  //  warning(false, '[history] ' + message)
-  //  return fn.apply(this, arguments)
-  //}
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _warning = require('warning');
+
+var _warning2 = _interopRequireDefault(_warning);
+
+function deprecate(fn, message) {
+  return function () {
+    process.env.NODE_ENV !== 'production' ? _warning2['default'](false, '[history] ' + message) : undefined;
+    return fn.apply(this, arguments);
+  };
 }
 
-exports["default"] = deprecate;
-module.exports = exports["default"];
-},{}],36:[function(require,module,exports){
+exports['default'] = deprecate;
+module.exports = exports['default'];
+}).call(this,require('_process'))
+},{"_process":60,"warning":85}],31:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -2984,7 +2659,7 @@ var _useBeforeUnload2 = _interopRequireDefault(_useBeforeUnload);
 
 exports['default'] = _deprecate2['default'](_useBeforeUnload2['default'], 'enableBeforeUnload is deprecated, use useBeforeUnload instead');
 module.exports = exports['default'];
-},{"./deprecate":35,"./useBeforeUnload":43}],37:[function(require,module,exports){
+},{"./deprecate":30,"./useBeforeUnload":36}],32:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3001,21 +2676,7 @@ var _useQueries2 = _interopRequireDefault(_useQueries);
 
 exports['default'] = _deprecate2['default'](_useQueries2['default'], 'enableQueries is deprecated, use useQueries instead');
 module.exports = exports['default'];
-},{"./deprecate":35,"./useQueries":44}],38:[function(require,module,exports){
-"use strict";
-
-exports.__esModule = true;
-function extractPath(string) {
-  var match = string.match(/^https?:\/\/[^\/]*/);
-
-  if (match == null) return string;
-
-  return string.substring(match[0].length);
-}
-
-exports["default"] = extractPath;
-module.exports = exports["default"];
-},{}],39:[function(require,module,exports){
+},{"./deprecate":30,"./useQueries":37}],33:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3087,54 +2748,7 @@ var _enableQueries3 = _interopRequireDefault(_enableQueries2);
 exports.enableQueries = _enableQueries3['default'];
 var createLocation = _deprecate2['default'](_createLocation3['default'], 'Using createLocation without a history instance is deprecated; please use history.createLocation instead');
 exports.createLocation = createLocation;
-},{"./Actions":24,"./createBrowserHistory":29,"./createHashHistory":31,"./createLocation":33,"./createMemoryHistory":34,"./deprecate":35,"./enableBeforeUnload":36,"./enableQueries":37,"./useBasename":42,"./useBeforeUnload":43,"./useQueries":44}],40:[function(require,module,exports){
-(function (process){
-'use strict';
-
-exports.__esModule = true;
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _warning = require('warning');
-
-var _warning2 = _interopRequireDefault(_warning);
-
-var _extractPath = require('./extractPath');
-
-var _extractPath2 = _interopRequireDefault(_extractPath);
-
-function parsePath(path) {
-  var pathname = _extractPath2['default'](path);
-  var search = '';
-  var hash = '';
-
-  process.env.NODE_ENV !== 'production' ? _warning2['default'](path === pathname, 'A path must be pathname + search + hash only, not a fully qualified URL like "%s"', path) : undefined;
-
-  var hashIndex = pathname.indexOf('#');
-  if (hashIndex !== -1) {
-    hash = pathname.substring(hashIndex);
-    pathname = pathname.substring(0, hashIndex);
-  }
-
-  var searchIndex = pathname.indexOf('?');
-  if (searchIndex !== -1) {
-    search = pathname.substring(searchIndex);
-    pathname = pathname.substring(0, searchIndex);
-  }
-
-  if (pathname === '') pathname = '/';
-
-  return {
-    pathname: pathname,
-    search: search,
-    hash: hash
-  };
-}
-
-exports['default'] = parsePath;
-module.exports = exports['default'];
-}).call(this,require('_process'))
-},{"./extractPath":38,"_process":66,"warning":88}],41:[function(require,module,exports){
+},{"./Actions":18,"./createBrowserHistory":24,"./createHashHistory":26,"./createLocation":28,"./createMemoryHistory":29,"./deprecate":30,"./enableBeforeUnload":31,"./enableQueries":32,"./useBasename":35,"./useBeforeUnload":36,"./useQueries":37}],34:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3161,7 +2775,7 @@ function runTransitionHook(hook, location, callback) {
 exports['default'] = runTransitionHook;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"_process":66,"warning":88}],42:[function(require,module,exports){
+},{"_process":60,"warning":85}],35:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -3170,21 +2784,13 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
 var _ExecutionEnvironment = require('./ExecutionEnvironment');
+
+var _PathUtils = require('./PathUtils');
 
 var _runTransitionHook = require('./runTransitionHook');
 
 var _runTransitionHook2 = _interopRequireDefault(_runTransitionHook);
-
-var _extractPath = require('./extractPath');
-
-var _extractPath2 = _interopRequireDefault(_extractPath);
-
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
 
 var _deprecate = require('./deprecate');
 
@@ -3193,18 +2799,17 @@ var _deprecate2 = _interopRequireDefault(_deprecate);
 function useBasename(createHistory) {
   return function () {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+    var history = createHistory(options);
+
     var basename = options.basename;
-
-    var historyOptions = _objectWithoutProperties(options, ['basename']);
-
-    var history = createHistory(historyOptions);
 
     // Automatically use the value of <base href> in HTML
     // documents as basename if it's not explicitly given.
     if (basename == null && _ExecutionEnvironment.canUseDOM) {
       var base = document.getElementsByTagName('base')[0];
 
-      if (base) basename = _extractPath2['default'](base.href);
+      if (base) basename = _PathUtils.extractPath(base.href);
     }
 
     function addBasename(location) {
@@ -3225,7 +2830,7 @@ function useBasename(createHistory) {
     function prependBasename(location) {
       if (!basename) return location;
 
-      if (typeof location === 'string') location = _parsePath2['default'](location);
+      if (typeof location === 'string') location = _PathUtils.parsePath(location);
 
       var pname = location.pathname;
       var normalizedBasename = basename.slice(-1) === '/' ? basename : basename + '/';
@@ -3267,20 +2872,24 @@ function useBasename(createHistory) {
       return history.createHref(prependBasename(location));
     }
 
-    function createLocation() {
-      return addBasename(history.createLocation.apply(history, arguments));
+    function createLocation(location) {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      return addBasename(history.createLocation.apply(history, [prependBasename(location)].concat(args)));
     }
 
     // deprecated
     function pushState(state, path) {
-      if (typeof path === 'string') path = _parsePath2['default'](path);
+      if (typeof path === 'string') path = _PathUtils.parsePath(path);
 
       push(_extends({ state: state }, path));
     }
 
     // deprecated
     function replaceState(state, path) {
-      if (typeof path === 'string') path = _parsePath2['default'](path);
+      if (typeof path === 'string') path = _PathUtils.parsePath(path);
 
       replace(_extends({ state: state }, path));
     }
@@ -3302,7 +2911,7 @@ function useBasename(createHistory) {
 
 exports['default'] = useBasename;
 module.exports = exports['default'];
-},{"./ExecutionEnvironment":28,"./deprecate":35,"./extractPath":38,"./parsePath":40,"./runTransitionHook":41}],43:[function(require,module,exports){
+},{"./ExecutionEnvironment":22,"./PathUtils":23,"./deprecate":30,"./runTransitionHook":34}],36:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3416,7 +3025,7 @@ function useBeforeUnload(createHistory) {
 exports['default'] = useBeforeUnload;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"./DOMUtils":27,"./ExecutionEnvironment":28,"./deprecate":35,"_process":66,"warning":88}],44:[function(require,module,exports){
+},{"./DOMUtils":21,"./ExecutionEnvironment":22,"./deprecate":30,"_process":60,"warning":85}],37:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3425,8 +3034,6 @@ exports.__esModule = true;
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 var _warning = require('warning');
 
@@ -3438,9 +3045,7 @@ var _runTransitionHook = require('./runTransitionHook');
 
 var _runTransitionHook2 = _interopRequireDefault(_runTransitionHook);
 
-var _parsePath = require('./parsePath');
-
-var _parsePath2 = _interopRequireDefault(_parsePath);
+var _PathUtils = require('./PathUtils');
 
 var _deprecate = require('./deprecate');
 
@@ -3467,12 +3072,11 @@ function isNestedObject(object) {
 function useQueries(createHistory) {
   return function () {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+    var history = createHistory(options);
+
     var stringifyQuery = options.stringifyQuery;
     var parseQueryString = options.parseQueryString;
-
-    var historyOptions = _objectWithoutProperties(options, ['stringifyQuery', 'parseQueryString']);
-
-    var history = createHistory(historyOptions);
 
     if (typeof stringifyQuery !== 'function') stringifyQuery = defaultStringifyQuery;
 
@@ -3495,14 +3099,16 @@ function useQueries(createHistory) {
     function appendQuery(location, query) {
       var _extends2;
 
-      var queryString = undefined;
-      if (!query || (queryString = stringifyQuery(query)) === '') return location;
+      var searchBaseSpec = location[SEARCH_BASE_KEY];
+      var queryString = query ? stringifyQuery(query) : '';
+      if (!searchBaseSpec && !queryString) {
+        return location;
+      }
 
       process.env.NODE_ENV !== 'production' ? _warning2['default'](stringifyQuery !== defaultStringifyQuery || !isNestedObject(query), 'useQueries does not stringify nested query objects by default; ' + 'use a custom stringifyQuery function') : undefined;
 
-      if (typeof location === 'string') location = _parsePath2['default'](location);
+      if (typeof location === 'string') location = _PathUtils.parsePath(location);
 
-      var searchBaseSpec = location[SEARCH_BASE_KEY];
       var searchBase = undefined;
       if (searchBaseSpec && location.search === searchBaseSpec.search) {
         searchBase = searchBaseSpec.searchBase;
@@ -3510,7 +3116,10 @@ function useQueries(createHistory) {
         searchBase = location.search || '';
       }
 
-      var search = searchBase + (searchBase ? '&' : '?') + queryString;
+      var search = searchBase;
+      if (queryString) {
+        search += (search ? '&' : '?') + queryString;
+      }
 
       return _extends({}, location, (_extends2 = {
         search: search
@@ -3540,35 +3149,39 @@ function useQueries(createHistory) {
     }
 
     function createPath(location, query) {
-      //warning(
-      //  !query,
-      //  'the query argument to createPath is deprecated; use a location descriptor instead'
-      //)
+      process.env.NODE_ENV !== 'production' ? _warning2['default'](!query, 'the query argument to createPath is deprecated; use a location descriptor instead') : undefined;
+
       return history.createPath(appendQuery(location, query || location.query));
     }
 
     function createHref(location, query) {
-      //warning(
-      //  !query,
-      //  'the query argument to createHref is deprecated; use a location descriptor instead'
-      //)
+      process.env.NODE_ENV !== 'production' ? _warning2['default'](!query, 'the query argument to createHref is deprecated; use a location descriptor instead') : undefined;
+
       return history.createHref(appendQuery(location, query || location.query));
     }
 
-    function createLocation() {
-      return addQuery(history.createLocation.apply(history, arguments));
+    function createLocation(location) {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      var fullLocation = history.createLocation.apply(history, [appendQuery(location, location.query)].concat(args));
+      if (location.query) {
+        fullLocation.query = location.query;
+      }
+      return addQuery(fullLocation);
     }
 
     // deprecated
     function pushState(state, path, query) {
-      if (typeof path === 'string') path = _parsePath2['default'](path);
+      if (typeof path === 'string') path = _PathUtils.parsePath(path);
 
       push(_extends({ state: state }, path, { query: query }));
     }
 
     // deprecated
     function replaceState(state, path, query) {
-      if (typeof path === 'string') path = _parsePath2['default'](path);
+      if (typeof path === 'string') path = _PathUtils.parsePath(path);
 
       replace(_extends({ state: state }, path, { query: query }));
     }
@@ -3591,7 +3204,7 @@ function useQueries(createHistory) {
 exports['default'] = useQueries;
 module.exports = exports['default'];
 }).call(this,require('_process'))
-},{"./deprecate":35,"./parsePath":40,"./runTransitionHook":41,"_process":66,"query-string":67,"warning":88}],45:[function(require,module,exports){
+},{"./PathUtils":23,"./deprecate":30,"./runTransitionHook":34,"_process":60,"query-string":61,"warning":85}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -3638,7 +3251,7 @@ exports['default'] = function (h) {
 
 module.exports = exports['default'];
 
-},{}],46:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 (function (process){
 /**
  * Copyright 2013-2015, Facebook, Inc.
@@ -3693,7 +3306,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 
 }).call(this,require('_process'))
-},{"_process":66}],47:[function(require,module,exports){
+},{"_process":60}],40:[function(require,module,exports){
 /**
  * lodash 3.1.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3826,7 +3439,7 @@ function isLength(value) {
 
 module.exports = baseFlatten;
 
-},{"lodash.isarguments":58,"lodash.isarray":59}],48:[function(require,module,exports){
+},{"lodash.isarguments":52,"lodash.isarray":53}],41:[function(require,module,exports){
 /**
  * lodash 3.0.3 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
@@ -3876,7 +3489,7 @@ function createBaseFor(fromRight) {
 
 module.exports = baseFor;
 
-},{}],49:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -3935,7 +3548,7 @@ function indexOfNaN(array, fromIndex, fromRight) {
 
 module.exports = baseIndexOf;
 
-},{}],50:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 /**
  * lodash 3.0.3 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4005,7 +3618,7 @@ function baseUniq(array, iteratee) {
 
 module.exports = baseUniq;
 
-},{"lodash._baseindexof":49,"lodash._cacheindexof":52,"lodash._createcache":53}],51:[function(require,module,exports){
+},{"lodash._baseindexof":42,"lodash._cacheindexof":45,"lodash._createcache":46}],44:[function(require,module,exports){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4072,7 +3685,7 @@ function identity(value) {
 
 module.exports = bindCallback;
 
-},{}],52:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4127,7 +3740,7 @@ function isObject(value) {
 
 module.exports = cacheIndexOf;
 
-},{}],53:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 (function (global){
 /**
  * lodash 3.1.2 (Custom Build) <https://lodash.com/>
@@ -4222,7 +3835,7 @@ SetCache.prototype.push = cachePush;
 module.exports = createCache;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"lodash._getnative":54}],54:[function(require,module,exports){
+},{"lodash._getnative":47}],47:[function(require,module,exports){
 /**
  * lodash 3.9.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4361,16 +3974,79 @@ function isNative(value) {
 
 module.exports = getNative;
 
-},{}],55:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 (function (global){
 /**
- * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+ * lodash 3.0.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
  * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <https://lodash.com/license>
  */
+
+/** Used to determine if values are of the language type `Object`. */
+var objectTypes = {
+  'function': true,
+  'object': true
+};
+
+/** Detect free variable `exports`. */
+var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
+  ? exports
+  : undefined;
+
+/** Detect free variable `module`. */
+var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
+  ? module
+  : undefined;
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
+
+/** Detect free variable `self`. */
+var freeSelf = checkGlobal(objectTypes[typeof self] && self);
+
+/** Detect free variable `window`. */
+var freeWindow = checkGlobal(objectTypes[typeof window] && window);
+
+/** Detect `this` as the global object. */
+var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
+
+/**
+ * Used as a reference to the global object.
+ *
+ * The `this` value is used if it's the global object to avoid Greasemonkey's
+ * restricted `window` object, otherwise the `window` object is used.
+ */
+var root = freeGlobal ||
+  ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) ||
+    freeSelf || thisGlobal || Function('return this')();
+
+/**
+ * Checks if `value` is a global object.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {null|Object} Returns `value` if it's a global object, else `null`.
+ */
+function checkGlobal(value) {
+  return (value && value.Object === Object) ? value : null;
+}
+
+module.exports = root;
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],49:[function(require,module,exports){
+/**
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
+ * Build: `lodash modularize exports="npm" -o ./`
+ * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
+ * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+ * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+ * Available under MIT license <https://lodash.com/license>
+ */
+var root = require('lodash._root');
 
 /** Used as references for various `Number` constants. */
 var INFINITY = 1 / 0;
@@ -4414,49 +4090,6 @@ var deburredLetters = {
   '\xde': 'Th', '\xfe': 'th',
   '\xdf': 'ss'
 };
-
-/** Used to determine if values are of the language type `Object`. */
-var objectTypes = {
-  'function': true,
-  'object': true
-};
-
-/** Detect free variable `exports`. */
-var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType) ? exports : null;
-
-/** Detect free variable `module`. */
-var freeModule = (objectTypes[typeof module] && module && !module.nodeType) ? module : null;
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
-
-/** Detect free variable `self`. */
-var freeSelf = checkGlobal(objectTypes[typeof self] && self);
-
-/** Detect free variable `window`. */
-var freeWindow = checkGlobal(objectTypes[typeof window] && window);
-
-/** Detect `this` as the global object. */
-var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
-
-/**
- * Used as a reference to the global object.
- *
- * The `this` value is used if it's the global object to avoid Greasemonkey's
- * restricted `window` object, otherwise the `window` object is used.
- */
-var root = freeGlobal || ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) || freeSelf || thisGlobal || Function('return this')();
-
-/**
- * Checks if `value` is a global object.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {null|Object} Returns `value` if it's a global object, else `null`.
- */
-function checkGlobal(value) {
-  return (value && value.Object === Object) ? value : null;
-}
 
 /**
  * Used by `_.deburr` to convert latin-1 supplementary letters to basic latin letters.
@@ -4589,17 +4222,16 @@ function deburr(string) {
 
 module.exports = deburr;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
-(function (global){
+},{"lodash._root":48}],50:[function(require,module,exports){
 /**
- * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
  * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <https://lodash.com/license>
  */
+var root = require('lodash._root');
 
 /** Used as references for various `Number` constants. */
 var INFINITY = 1 / 0;
@@ -4620,49 +4252,6 @@ var htmlEscapes = {
   "'": '&#39;',
   '`': '&#96;'
 };
-
-/** Used to determine if values are of the language type `Object`. */
-var objectTypes = {
-  'function': true,
-  'object': true
-};
-
-/** Detect free variable `exports`. */
-var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType) ? exports : null;
-
-/** Detect free variable `module`. */
-var freeModule = (objectTypes[typeof module] && module && !module.nodeType) ? module : null;
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
-
-/** Detect free variable `self`. */
-var freeSelf = checkGlobal(objectTypes[typeof self] && self);
-
-/** Detect free variable `window`. */
-var freeWindow = checkGlobal(objectTypes[typeof window] && window);
-
-/** Detect `this` as the global object. */
-var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
-
-/**
- * Used as a reference to the global object.
- *
- * The `this` value is used if it's the global object to avoid Greasemonkey's
- * restricted `window` object, otherwise the `window` object is used.
- */
-var root = freeGlobal || ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) || freeSelf || thisGlobal || Function('return this')();
-
-/**
- * Checks if `value` is a global object.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {null|Object} Returns `value` if it's a global object, else `null`.
- */
-function checkGlobal(value) {
-  return (value && value.Object === Object) ? value : null;
-}
 
 /**
  * Used by `_.escape` to convert characters to HTML entities.
@@ -4815,8 +4404,7 @@ function escape(string) {
 
 module.exports = escape;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],57:[function(require,module,exports){
+},{"lodash._root":48}],51:[function(require,module,exports){
 /**
  * lodash 3.0.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4889,9 +4477,9 @@ var forOwn = createForOwn(baseForOwn);
 
 module.exports = forOwn;
 
-},{"lodash._basefor":48,"lodash._bindcallback":51,"lodash.keys":61}],58:[function(require,module,exports){
+},{"lodash._basefor":41,"lodash._bindcallback":44,"lodash.keys":55}],52:[function(require,module,exports){
 /**
- * lodash 3.0.6 (Custom Build) <https://lodash.com/>
+ * lodash 3.0.8 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
  * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
@@ -4976,7 +4564,6 @@ function isArguments(value) {
  *
  * @static
  * @memberOf _
- * @type Function
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
@@ -4995,8 +4582,7 @@ function isArguments(value) {
  * // => false
  */
 function isArrayLike(value) {
-  return value != null &&
-    !(typeof value == 'function' && isFunction(value)) && isLength(getLength(value));
+  return value != null && isLength(getLength(value)) && !isFunction(value);
 }
 
 /**
@@ -5005,7 +4591,6 @@ function isArrayLike(value) {
  *
  * @static
  * @memberOf _
- * @type Function
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
@@ -5045,8 +4630,8 @@ function isArrayLikeObject(value) {
  */
 function isFunction(value) {
   // The use of `Object#toString` avoids issues with the `typeof` operator
-  // in Safari 8 which returns 'object' for typed array constructors, and
-  // PhantomJS 1.9 which returns 'function' for `NodeList` instances.
+  // in Safari 8 which returns 'object' for typed array and weak map constructors,
+  // and PhantomJS 1.9 which returns 'function' for `NodeList` instances.
   var tag = isObject(value) ? objectToString.call(value) : '';
   return tag == funcTag || tag == genTag;
 }
@@ -5076,7 +4661,8 @@ function isFunction(value) {
  * // => false
  */
 function isLength(value) {
-  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+  return typeof value == 'number' &&
+    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
 }
 
 /**
@@ -5136,7 +4722,7 @@ function isObjectLike(value) {
 
 module.exports = isArguments;
 
-},{}],59:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 /**
  * lodash 3.0.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -5318,7 +4904,7 @@ function isNative(value) {
 
 module.exports = isArray;
 
-},{}],60:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 /**
  * lodash 3.1.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
@@ -5392,7 +4978,7 @@ var kebabCase = createCompounder(function(result, word, index) {
 
 module.exports = kebabCase;
 
-},{"lodash.deburr":55,"lodash.words":64}],61:[function(require,module,exports){
+},{"lodash.deburr":49,"lodash.words":58}],55:[function(require,module,exports){
 /**
  * lodash 3.1.2 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -5630,7 +5216,7 @@ function keysIn(object) {
 
 module.exports = keys;
 
-},{"lodash._getnative":54,"lodash.isarguments":58,"lodash.isarray":59}],62:[function(require,module,exports){
+},{"lodash._getnative":47,"lodash.isarguments":52,"lodash.isarray":53}],56:[function(require,module,exports){
 /**
  * lodash 3.6.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -5699,7 +5285,7 @@ function restParam(func, start) {
 
 module.exports = restParam;
 
-},{}],63:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -5736,16 +5322,16 @@ var union = restParam(function(arrays) {
 
 module.exports = union;
 
-},{"lodash._baseflatten":47,"lodash._baseuniq":50,"lodash.restparam":62}],64:[function(require,module,exports){
-(function (global){
+},{"lodash._baseflatten":40,"lodash._baseuniq":43,"lodash.restparam":56}],58:[function(require,module,exports){
 /**
- * lodash 3.1.2 (Custom Build) <https://lodash.com/>
+ * lodash 3.2.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
  * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  * Available under MIT license <https://lodash.com/license>
  */
+var root = require('lodash._root');
 
 /** Used as references for various `Number` constants. */
 var INFINITY = 1 / 0;
@@ -5806,49 +5392,6 @@ var reComplexWord = RegExp([
 
 /** Used to detect strings that need a more robust regexp to match words. */
 var reHasComplexWord = /[a-z][A-Z]|[0-9][a-zA-Z]|[a-zA-Z][0-9]|[^a-zA-Z0-9 ]/;
-
-/** Used to determine if values are of the language type `Object`. */
-var objectTypes = {
-  'function': true,
-  'object': true
-};
-
-/** Detect free variable `exports`. */
-var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType) ? exports : null;
-
-/** Detect free variable `module`. */
-var freeModule = (objectTypes[typeof module] && module && !module.nodeType) ? module : null;
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
-
-/** Detect free variable `self`. */
-var freeSelf = checkGlobal(objectTypes[typeof self] && self);
-
-/** Detect free variable `window`. */
-var freeWindow = checkGlobal(objectTypes[typeof window] && window);
-
-/** Detect `this` as the global object. */
-var thisGlobal = checkGlobal(objectTypes[typeof this] && this);
-
-/**
- * Used as a reference to the global object.
- *
- * The `this` value is used if it's the global object to avoid Greasemonkey's
- * restricted `window` object, otherwise the `window` object is used.
- */
-var root = freeGlobal || ((freeWindow !== (thisGlobal && thisGlobal.window)) && freeWindow) || freeSelf || thisGlobal || Function('return this')();
-
-/**
- * Checks if `value` is a global object.
- *
- * @private
- * @param {*} value The value to check.
- * @returns {null|Object} Returns `value` if it's a global object, else `null`.
- */
-function checkGlobal(value) {
-  return (value && value.Object === Object) ? value : null;
-}
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -5979,8 +5522,7 @@ function words(string, pattern, guard) {
 
 module.exports = words;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],65:[function(require,module,exports){
+},{"lodash._root":48}],59:[function(require,module,exports){
 'use strict';
 
 var proto = Element.prototype;
@@ -6010,7 +5552,7 @@ function match(el, selector) {
   }
   return false;
 }
-},{}],66:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6103,7 +5645,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],67:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 'use strict';
 var strictUriEncode = require('strict-uri-encode');
 
@@ -6160,7 +5702,7 @@ exports.stringify = function (obj) {
 		}
 
 		if (Array.isArray(val)) {
-			return val.sort().map(function (val2) {
+			return val.slice().sort().map(function (val2) {
 				return strictUriEncode(key) + '=' + strictUriEncode(val2);
 			}).join('&');
 		}
@@ -6171,7 +5713,7 @@ exports.stringify = function (obj) {
 	}).join('&') : '';
 };
 
-},{"strict-uri-encode":87}],68:[function(require,module,exports){
+},{"strict-uri-encode":84}],62:[function(require,module,exports){
 (function (process,global){
 // Copyright (c) Microsoft, All rights reserved. See License.txt in the project root for license information.
 
@@ -7513,7 +7055,7 @@ var isEqual = Rx.internals.isEqual = function (value, other) {
       scheduleMethod = function (action) {
         var id = nextHandle++;
         tasksByHandle[id] = action;
-        root.postMessage(MSG_PREFIX + currentId, '*');
+        root.postMessage(MSG_PREFIX + id, '*');
         return id;
       };
     } else if (!!root.MessageChannel) {
@@ -7607,6 +7149,16 @@ var isEqual = Rx.internals.isEqual = function (value, other) {
       var disposable = new SingleAssignmentDisposable(),
           id = localSetTimeout(scheduleAction(disposable, action, this, state), dueTime);
       return new BinaryDisposable(disposable, new LocalClearDisposable(id));
+    };
+
+    function scheduleLongRunning(state, action, disposable) {
+      return function () { action(state, disposable); };
+    }
+
+    DefaultScheduler.prototype.scheduleLongRunning = function (state, action) {
+      var disposable = disposableCreate(noop);
+      scheduleMethod(scheduleLongRunning(state, action, disposable));
+      return disposable;
     };
 
     return DefaultScheduler;
@@ -8441,58 +7993,6 @@ var FlatMapObservable = Rx.FlatMapObservable = (function(__super__) {
     return new CatchErrorObservable(this);
   };
 
-  Enumerable.prototype.catchErrorWhen = function (notificationHandler) {
-    var sources = this;
-    return new AnonymousObservable(function (o) {
-      var exceptions = new Subject(),
-        notifier = new Subject(),
-        handled = notificationHandler(exceptions),
-        notificationDisposable = handled.subscribe(notifier);
-
-      var e = sources[$iterator$]();
-
-      var state = { isDisposed: false },
-        lastError,
-        subscription = new SerialDisposable();
-      var cancelable = currentThreadScheduler.scheduleRecursive(null, function (_, self) {
-        if (state.isDisposed) { return; }
-        var currentItem = tryCatch(e.next).call(e);
-        if (currentItem === errorObj) { return o.onError(currentItem.e); }
-
-        if (currentItem.done) {
-          if (lastError) {
-            o.onError(lastError);
-          } else {
-            o.onCompleted();
-          }
-          return;
-        }
-
-        // Check if promise
-        var currentValue = currentItem.value;
-        isPromise(currentValue) && (currentValue = observableFromPromise(currentValue));
-
-        var outer = new SingleAssignmentDisposable();
-        var inner = new SingleAssignmentDisposable();
-        subscription.setDisposable(new BinaryDisposable(inner, outer));
-        outer.setDisposable(currentValue.subscribe(
-          function(x) { o.onNext(x); },
-          function (exn) {
-            inner.setDisposable(notifier.subscribe(self, function(ex) {
-              o.onError(ex);
-            }, function() {
-              o.onCompleted();
-            }));
-
-            exceptions.onNext(exn);
-          },
-          function() { o.onCompleted(); }));
-      });
-
-      return new NAryDisposable([notificationDisposable, subscription, cancelable, new IsDisposedDisposable(state)]);
-    });
-  };
-
   var RepeatEnumerable = (function (__super__) {
     inherits(RepeatEnumerable, __super__);
     function RepeatEnumerable(v, c) {
@@ -8637,9 +8137,17 @@ var ObserveOnObservable = (function (__super__) {
     }
 
     FromPromiseObservable.prototype.subscribeCore = function(o) {
-      var sad = new SingleAssignmentDisposable(), self = this;
+      var sad = new SingleAssignmentDisposable(), self = this, p = this._p;
 
-      this._p
+      if (isFunction(p)) {
+        p = tryCatch(p)();
+        if (p === errorObj) {
+          o.onError(p.e);
+          return sad;
+        }
+      }
+
+      p
         .then(function (data) {
           sad.setDisposable(self._s.schedule([o, data], scheduleNext));
         }, function (err) {
@@ -8995,37 +8503,41 @@ var ObserveOnObservable = (function (__super__) {
   var GenerateObservable = (function (__super__) {
     inherits(GenerateObservable, __super__);
     function GenerateObservable(state, cndFn, itrFn, resFn, s) {
-      this._state = state;
+      this._initialState = state;
       this._cndFn = cndFn;
       this._itrFn = itrFn;
       this._resFn = resFn;
       this._s = s;
-      this._first = true;
       __super__.call(this);
     }
 
-    function scheduleRecursive(self, recurse) {
-      if (self._first) {
-        self._first = false;
+    function scheduleRecursive(state, recurse) {
+      if (state.first) {
+        state.first = false;
       } else {
-        self._state = tryCatch(self._itrFn)(self._state);
-        if (self._state === errorObj) { return self._o.onError(self._state.e); }
+        state.newState = tryCatch(state.self._itrFn)(state.newState);
+        if (state.newState === errorObj) { return state.o.onError(state.newState.e); }
       }
-      var hasResult = tryCatch(self._cndFn)(self._state);
-      if (hasResult === errorObj) { return self._o.onError(hasResult.e); }
+      var hasResult = tryCatch(state.self._cndFn)(state.newState);
+      if (hasResult === errorObj) { return state.o.onError(hasResult.e); }
       if (hasResult) {
-        var result = tryCatch(self._resFn)(self._state);
-        if (result === errorObj) { return self._o.onError(result.e); }
-        self._o.onNext(result);
-        recurse(self);
+        var result = tryCatch(state.self._resFn)(state.newState);
+        if (result === errorObj) { return state.o.onError(result.e); }
+        state.o.onNext(result);
+        recurse(state);
       } else {
-        self._o.onCompleted();
+        state.o.onCompleted();
       }
     }
 
     GenerateObservable.prototype.subscribeCore = function (o) {
-      this._o = o;
-      return this._s.scheduleRecursive(this, scheduleRecursive);
+      var state = {
+        o: o,
+        self: this,
+        first: true,
+        newState: this._initialState
+      };
+      return this._s.scheduleRecursive(state, scheduleRecursive);
     };
 
     return GenerateObservable;
@@ -10639,7 +10151,7 @@ observableProto.zipIterable = function () {
    * @param {Number} [skip] Number of elements to skip between creation of consecutive buffers. If not provided, defaults to the count.
    * @returns {Observable} An observable sequence of buffers.
    */
-  observableProto.bufferWithCount = function (count, skip) {
+  observableProto.bufferWithCount = observableProto.bufferCount = function (count, skip) {
     typeof skip !== 'number' && (skip = count);
     return this.windowWithCount(count, skip)
       .flatMap(toArray)
@@ -10989,19 +10501,184 @@ observableProto.zipIterable = function () {
     return enumerableRepeat(this, retryCount).catchError();
   };
 
-  /**
-   *  Repeats the source observable sequence upon error each time the notifier emits or until it successfully terminates. 
-   *  if the notifier completes, the observable sequence completes.
-   *
-   * @example
-   *  var timer = Observable.timer(500);
-   *  var source = observable.retryWhen(timer);
-   * @param {Observable} [notifier] An observable that triggers the retries or completes the observable with onNext or onCompleted respectively.
-   * @returns {Observable} An observable sequence producing the elements of the given sequence repeatedly until it terminates successfully.
-   */
+  function repeat(value) {
+    return {
+      '@@iterator': function () {
+        return {
+          next: function () {
+            return { done: false, value: value };
+          }
+        };
+      }
+    };
+  }
+
+  var RetryWhenObservable = (function(__super__) {
+    function createDisposable(state) {
+      return {
+        isDisposed: false,
+        dispose: function () {
+          if (!this.isDisposed) {
+            this.isDisposed = true;
+            state.isDisposed = true;
+          }
+        }
+      };
+    }
+
+    function RetryWhenObservable(source, notifier) {
+      this.source = source;
+      this._notifier = notifier;
+      __super__.call(this);
+    }
+
+    inherits(RetryWhenObservable, __super__);
+
+    RetryWhenObservable.prototype.subscribeCore = function (o) {
+      var exceptions = new Subject(),
+        notifier = new Subject(),
+        handled = this._notifier(exceptions),
+        notificationDisposable = handled.subscribe(notifier);
+
+      var e = this.source['@@iterator']();
+
+      var state = { isDisposed: false },
+        lastError,
+        subscription = new SerialDisposable();
+      var cancelable = currentThreadScheduler.scheduleRecursive(null, function (_, recurse) {
+        if (state.isDisposed) { return; }
+        var currentItem = e.next();
+
+        if (currentItem.done) {
+          if (lastError) {
+            o.onError(lastError);
+          } else {
+            o.onCompleted();
+          }
+          return;
+        }
+
+        // Check if promise
+        var currentValue = currentItem.value;
+        isPromise(currentValue) && (currentValue = observableFromPromise(currentValue));
+
+        var outer = new SingleAssignmentDisposable();
+        var inner = new SingleAssignmentDisposable();
+        subscription.setDisposable(new BinaryDisposable(inner, outer));
+        outer.setDisposable(currentValue.subscribe(
+          function(x) { o.onNext(x); },
+          function (exn) {
+            inner.setDisposable(notifier.subscribe(recurse, function(ex) {
+              o.onError(ex);
+            }, function() {
+              o.onCompleted();
+            }));
+
+            exceptions.onNext(exn);
+            outer.dispose();
+          },
+          function() { o.onCompleted(); }));
+      });
+
+      return new NAryDisposable([notificationDisposable, subscription, cancelable, createDisposable(state)]);
+    };
+
+    return RetryWhenObservable;
+  }(ObservableBase));
+
   observableProto.retryWhen = function (notifier) {
-    return enumerableRepeat(this).catchErrorWhen(notifier);
+    return new RetryWhenObservable(repeat(this), notifier);
   };
+
+  function repeat(value) {
+    return {
+      '@@iterator': function () {
+        return {
+          next: function () {
+            return { done: false, value: value };
+          }
+        };
+      }
+    };
+  }
+
+  var RepeatWhenObservable = (function(__super__) {
+    function createDisposable(state) {
+      return {
+        isDisposed: false,
+        dispose: function () {
+          if (!this.isDisposed) {
+            this.isDisposed = true;
+            state.isDisposed = true;
+          }
+        }
+      };
+    }
+
+    function RepeatWhenObservable(source, notifier) {
+      this.source = source;
+      this._notifier = notifier;
+      __super__.call(this);
+    }
+
+    inherits(RepeatWhenObservable, __super__);
+
+    RepeatWhenObservable.prototype.subscribeCore = function (o) {
+      var completions = new Subject(),
+        notifier = new Subject(),
+        handled = this._notifier(completions),
+        notificationDisposable = handled.subscribe(notifier);
+
+      var e = this.source['@@iterator']();
+
+      var state = { isDisposed: false },
+        lastError,
+        subscription = new SerialDisposable();
+      var cancelable = currentThreadScheduler.scheduleRecursive(null, function (_, recurse) {
+        if (state.isDisposed) { return; }
+        var currentItem = e.next();
+
+        if (currentItem.done) {
+          if (lastError) {
+            o.onError(lastError);
+          } else {
+            o.onCompleted();
+          }
+          return;
+        }
+
+        // Check if promise
+        var currentValue = currentItem.value;
+        isPromise(currentValue) && (currentValue = observableFromPromise(currentValue));
+
+        var outer = new SingleAssignmentDisposable();
+        var inner = new SingleAssignmentDisposable();
+        subscription.setDisposable(new BinaryDisposable(inner, outer));
+        outer.setDisposable(currentValue.subscribe(
+          function(x) { o.onNext(x); },
+          function (exn) { o.onError(exn); },
+          function() {
+            inner.setDisposable(notifier.subscribe(recurse, function(ex) {
+              o.onError(ex);
+            }, function() {
+              o.onCompleted();
+            }));
+
+            completions.onNext(null);
+            outer.dispose();
+          }));
+      });
+
+      return new NAryDisposable([notificationDisposable, subscription, cancelable, createDisposable(state)]);
+    };
+
+    return RepeatWhenObservable;
+  }(ObservableBase));
+
+  observableProto.repeatWhen = function (notifier) {
+    return new RepeatWhenObservable(repeat(this), notifier);
+  };
+
   var ScanObservable = (function(__super__) {
     inherits(ScanObservable, __super__);
     function ScanObservable(source, accumulator, hasSeed, seed) {
@@ -11145,7 +10822,7 @@ observableProto.zipIterable = function () {
       scheduler = immediateScheduler;
     }
     for(var args = [], i = start, len = arguments.length; i < len; i++) { args.push(arguments[i]); }
-    return enumerableOf([observableFromArray(args, scheduler), this]).concat();
+    return observableConcat.apply(null, [observableFromArray(args, scheduler), this]);
   };
 
   var TakeLastObserver = (function (__super__) {
@@ -11239,7 +10916,7 @@ observableProto.zipIterable = function () {
    * @param {Number} [skip] Number of elements to skip between creation of consecutive windows. If not specified, defaults to the count.
    * @returns {Observable} An observable sequence of windows.
    */
-  observableProto.windowWithCount = function (count, skip) {
+  observableProto.windowWithCount = observableProto.windowCount = function (count, skip) {
     var source = this;
     +count || (count = 0);
     Math.abs(count) === Infinity && (count = 0);
@@ -11677,7 +11354,7 @@ observableProto.zipIterable = function () {
         }
       }
       return currentProp;
-    }
+    };
   }
 
   /**
@@ -11693,7 +11370,7 @@ observableProto.zipIterable = function () {
     return this.map(plucker(args, len));
   };
 
-observableProto.flatMap = observableProto.selectMany = function(selector, resultSelector, thisArg) {
+observableProto.flatMap = observableProto.selectMany = observableProto.mergeMap = function(selector, resultSelector, thisArg) {
     return new FlatMapObservable(this, selector, resultSelector, thisArg).mergeAll();
 };
 
@@ -11749,9 +11426,10 @@ observableProto.flatMap = observableProto.selectMany = function(selector, result
     }, source).mergeAll();
   };
 
-Rx.Observable.prototype.flatMapLatest = function(selector, resultSelector, thisArg) {
+observableProto.flatMapLatest = observableProto.switchMap = function(selector, resultSelector, thisArg) {
     return new FlatMapObservable(this, selector, resultSelector, thisArg).switchLatest();
 };
+
   var SkipObservable = (function(__super__) {
     inherits(SkipObservable, __super__);
     function SkipObservable(source, count) {
@@ -12554,7 +12232,7 @@ Rx.Observable.prototype.flatMapLatest = function(selector, resultSelector, thisA
    * @returns {Observable} An observable sequence containing a single element with the minimum element in the source sequence.
    */
   observableProto.min = function (comparer) {
-    return this.minBy(identity, comparer).map(function (x) { return firstOnly(x); });
+    return this.minBy(identity, comparer).map(firstOnly);
   };
 
   /**
@@ -12580,7 +12258,7 @@ Rx.Observable.prototype.flatMapLatest = function(selector, resultSelector, thisA
    * @returns {Observable} An observable sequence containing a single element with the maximum element in the source sequence.
    */
   observableProto.max = function (comparer) {
-    return this.maxBy(identity, comparer).map(function (x) { return firstOnly(x); });
+    return this.maxBy(identity, comparer).map(firstOnly);
   };
 
   var AverageObservable = (function (__super__) {
@@ -13724,6 +13402,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     EventPatternDisposable.prototype.dispose = function () {
       if(!this.isDisposed) {
         isFunction(this._del) && this._del(this._fn, this._ret);
+        this.isDisposed = true;
       }
     };
 
@@ -13757,6 +13436,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     function PausableObservable(source, pauser) {
       this.source = source;
       this.controller = new Subject();
+      this.paused = true;
 
       if (pauser && pauser.subscribe) {
         this.pauser = this.controller.merge(pauser);
@@ -13772,7 +13452,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
         subscription = conn.subscribe(o),
         connection = disposableEmpty;
 
-      var pausable = this.pauser.distinctUntilChanged().subscribe(function (b) {
+      var pausable = this.pauser.startWith(!this.paused).distinctUntilChanged().subscribe(function (b) {
         if (b) {
           connection = conn.connect();
         } else {
@@ -13785,10 +13465,12 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     };
 
     PausableObservable.prototype.pause = function () {
+      this.paused = true;
       this.controller.onNext(false);
     };
 
     PausableObservable.prototype.resume = function () {
+      this.paused = false;
       this.controller.onNext(true);
     };
 
@@ -13862,6 +13544,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     function PausableBufferedObservable(source, pauser) {
       this.source = source;
       this.controller = new Subject();
+      this.paused = true;
 
       if (pauser && pauser.subscribe) {
         this.pauser = this.controller.merge(pauser);
@@ -13880,7 +13563,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       var subscription =
         combineLatestSource(
           this.source,
-          this.pauser.startWith(false).distinctUntilChanged(),
+          this.pauser.startWith(!this.paused).distinctUntilChanged(),
           function (data, shouldFire) {
             return { data: data, shouldFire: shouldFire };
           })
@@ -13913,10 +13596,12 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     };
 
     PausableBufferedObservable.prototype.pause = function () {
+      this.paused = true;
       this.controller.onNext(false);
     };
 
     PausableBufferedObservable.prototype.resume = function () {
+      this.paused = false;
       this.controller.onNext(true);
     };
 
@@ -14082,7 +13767,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     }
 
     function scheduleMethod(s, self) {
-      self.source.request(1);
+      return self.source.request(1);
     }
 
     StopAndWaitObservable.prototype._subscribe = function (o) {
@@ -14114,7 +13799,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       };
 
       function innerScheduleMethod(s, self) {
-        self.observable.source.request(1);
+        return self.observable.source.request(1);
       }
 
       StopAndWaitObserver.prototype.next = function (value) {
@@ -14122,7 +13807,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
         this.scheduleDisposable = defaultScheduler.schedule(this, innerScheduleMethod);
       };
 
-      StopAndWaitObservable.dispose = function () {
+      StopAndWaitObserver.dispose = function () {
         this.observer = null;
         if (this.cancel) {
           this.cancel.dispose();
@@ -14159,7 +13844,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     }
 
     function scheduleMethod(s, self) {
-      self.source.request(self.windowSize);
+      return self.source.request(self.windowSize);
     }
 
     WindowedObservable.prototype._subscribe = function (o) {
@@ -14192,7 +13877,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       };
 
       function innerScheduleMethod(s, self) {
-        self.observable.source.request(self.observable.windowSize);
+        return self.observable.source.request(self.observable.windowSize);
       }
 
       WindowedObserver.prototype.next = function (value) {
@@ -14245,7 +13930,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
 
     source.subscribe(
       function (x) {
-        !dest.write(String(x)) && source.pause();
+        !dest.write(x) && source.pause();
       },
       function (err) {
         dest.emit('error', err);
@@ -14485,6 +14170,9 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
 
     ConnectableObservable.prototype.connect = function () {
       if (!this._connection) {
+        if (this._subject.isStopped) {
+          return disposableEmpty;
+        }
         var subscription = this._source.subscribe(this._subject);
         this._connection = new ConnectDisposable(this, subscription);
       }
@@ -14844,6 +14532,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       this._o = o;
       this._p = null;
       this._hp = false;
+      __super__.call(this);
     }
 
     PairwiseObserver.prototype.next = function (x) {
@@ -15550,7 +15239,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
           }));
         }
       } catch (e) {
-        observableThrow(e).subscribe(o);
+        return observableThrow(e).subscribe(o);
       }
       var group = new CompositeDisposable();
       externalSubscriptions.forEach(function (joinObserver) {
@@ -15648,7 +15337,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       return _observableTimer(dueTime, scheduler);
     }
     if (dueTime instanceof Date && period !== undefined) {
-      return observableTimerDateAndPeriod(dueTime.getTime(), periodOrScheduler, scheduler);
+      return observableTimerDateAndPeriod(dueTime, periodOrScheduler, scheduler);
     }
     return observableTimerTimeSpanAndPeriod(dueTime, period, scheduler);
   };
@@ -15775,7 +15464,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       }
 
       return new BinaryDisposable(subscription, delays);
-    }, this);
+    }, source);
   }
 
   /**
@@ -15814,7 +15503,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     DebounceObservable.prototype.subscribeCore = function (o) {
       var cancelable = new SerialDisposable();
       return new BinaryDisposable(
-        this.source.subscribe(new DebounceObserver(o, this.source, this._dt, this._s, cancelable)),
+        this.source.subscribe(new DebounceObserver(o, this._dt, this._s, cancelable)),
         cancelable);
     };
 
@@ -15823,9 +15512,8 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
 
   var DebounceObserver = (function (__super__) {
     inherits(DebounceObserver, __super__);
-    function DebounceObserver(observer, source, dueTime, scheduler, cancelable) {
+    function DebounceObserver(observer, dueTime, scheduler, cancelable) {
       this._o = observer;
-      this._s = source;
       this._d = dueTime;
       this._scheduler = scheduler;
       this._c = cancelable;
@@ -15833,6 +15521,11 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       this._hv = false;
       this._id = 0;
       __super__.call(this);
+    }
+
+    function scheduleFuture(s, state) {
+      state.self._hv && state.self._id === state.currentId && state.self._o.onNext(state.x);
+      state.self._hv = false;
     }
 
     DebounceObserver.prototype.next = function (x) {
@@ -15928,7 +15621,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
    * @param {Scheduler} [scheduler]  Scheduler to run windowing timers on. If not specified, the timeout scheduler is used.
    * @returns {Observable} An observable sequence of windows.
    */
-  observableProto.windowWithTime = function (timeSpan, timeShiftOrScheduler, scheduler) {
+  observableProto.windowWithTime = observableProto.windowTime = function (timeSpan, timeShiftOrScheduler, scheduler) {
     var source = this, timeShift;
     timeShiftOrScheduler == null && (timeShift = timeSpan);
     isScheduler(scheduler) || (scheduler = defaultScheduler);
@@ -16008,7 +15701,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
    * @param {Scheduler} [scheduler]  Scheduler to run windowing timers on. If not specified, the timeout scheduler is used.
    * @returns {Observable} An observable sequence of windows.
    */
-  observableProto.windowWithTimeOrCount = function (timeSpan, count, scheduler) {
+  observableProto.windowWithTimeOrCount = observableProto.windowTimeOrCount = function (timeSpan, count, scheduler) {
     var source = this;
     isScheduler(scheduler) || (scheduler = defaultScheduler);
     return new AnonymousObservable(function (observer) {
@@ -16071,7 +15764,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
    * @param {Scheduler} [scheduler]  Scheduler to run buffer timers on. If not specified, the timeout scheduler is used.
    * @returns {Observable} An observable sequence of buffers.
    */
-  observableProto.bufferWithTime = function (timeSpan, timeShiftOrScheduler, scheduler) {
+  observableProto.bufferWithTime = observableProto.bufferTime = function (timeSpan, timeShiftOrScheduler, scheduler) {
     return this.windowWithTime(timeSpan, timeShiftOrScheduler, scheduler).flatMap(toArray);
   };
 
@@ -16084,7 +15777,7 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
    * @param {Scheduler} [scheduler]  Scheduler to run bufferin timers on. If not specified, the timeout scheduler is used.
    * @returns {Observable} An observable sequence of buffers.
    */
-  observableProto.bufferWithTimeOrCount = function (timeSpan, count, scheduler) {
+  observableProto.bufferWithTimeOrCount = observableProto.bufferTimeOrCount = function (timeSpan, count, scheduler) {
     return this.windowWithTimeOrCount(timeSpan, count, scheduler).flatMap(toArray);
   };
 
@@ -16192,37 +15885,74 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     return new TimestampObservable(this, scheduler);
   };
 
-  function sampleObservable(source, sampler) {
-    return new AnonymousObservable(function (o) {
-      var atEnd = false, value, hasValue = false;
+  var SampleObservable = (function(__super__) {
+    inherits(SampleObservable, __super__);
+    function SampleObservable(source, sampler) {
+      this.source = source;
+      this._sampler = sampler;
+      __super__.call(this);
+    }
 
-      function sampleSubscribe() {
-        if (hasValue) {
-          hasValue = false;
-          o.onNext(value);
-        }
-        atEnd && o.onCompleted();
-      }
+    SampleObservable.prototype.subscribeCore = function (o) {
+      var state = {
+        o: o,
+        atEnd: false,
+        value: null,
+        hasValue: false,
+        sourceSubscription: new SingleAssignmentDisposable()
+      };
 
-      var sourceSubscription = new SingleAssignmentDisposable();
-      sourceSubscription.setDisposable(source.subscribe(
-        function (newValue) {
-          hasValue = true;
-          value = newValue;
-        },
-        function (e) { o.onError(e); },
-        function () {
-          atEnd = true;
-          sourceSubscription.dispose();
-        }
-      ));
-
+      state.sourceSubscription.setDisposable(this.source.subscribe(new SampleSourceObserver(state)));
       return new BinaryDisposable(
-        sourceSubscription,
-        sampler.subscribe(sampleSubscribe, function (e) { o.onError(e); }, sampleSubscribe)
+        state.sourceSubscription,
+        this._sampler.subscribe(new SamplerObserver(state))
       );
-    }, source);
-  }
+    };
+
+    return SampleObservable;
+  }(ObservableBase));
+
+  var SamplerObserver = (function(__super__) {
+    inherits(SamplerObserver, __super__);
+    function SamplerObserver(s) {
+      this._s = s;
+      __super__.call(this);
+    }
+
+    SamplerObserver.prototype._handleMessage = function () {
+      if (this._s.hasValue) {
+        this._s.hasValue = false;
+        this._s.o.onNext(this._s.value);
+      }
+      this._s.atEnd && this._s.o.onCompleted();
+    };
+
+    SamplerObserver.prototype.next = function () { this._handleMessage(); };
+    SamplerObserver.prototype.error = function (e) { this._s.onError(e); };
+    SamplerObserver.prototype.completed = function () { this._handleMessage(); };
+
+    return SamplerObserver;
+  }(AbstractObserver));
+
+  var SampleSourceObserver = (function(__super__) {
+    inherits(SampleSourceObserver, __super__);
+    function SampleSourceObserver(s) {
+      this._s = s;
+      __super__.call(this);
+    }
+
+    SampleSourceObserver.prototype.next = function (x) {
+      this._s.hasValue = true;
+      this._s.value = x;
+    };
+    SampleSourceObserver.prototype.error = function (e) { this._s.o.onError(e); };
+    SampleSourceObserver.prototype.completed = function () {
+      this._s.atEnd = true;
+      this._s.sourceSubscription.dispose();
+    };
+
+    return SampleSourceObserver;
+  }(AbstractObserver));
 
   /**
    *  Samples the observable sequence at each interval.
@@ -16236,11 +15966,11 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
    * @param {Scheduler} [scheduler]  Scheduler to run the sampling timer on. If not specified, the timeout scheduler is used.
    * @returns {Observable} Sampled observable sequence.
    */
-  observableProto.sample = observableProto.throttleLatest = function (intervalOrSampler, scheduler) {
+  observableProto.sample = function (intervalOrSampler, scheduler) {
     isScheduler(scheduler) || (scheduler = defaultScheduler);
     return typeof intervalOrSampler === 'number' ?
-      sampleObservable(this, observableinterval(intervalOrSampler, scheduler)) :
-      sampleObservable(this, intervalOrSampler);
+      new SampleObservable(this, observableinterval(intervalOrSampler, scheduler)) :
+      new SampleObservable(this, intervalOrSampler);
   };
 
   var TimeoutError = Rx.TimeoutError = function(message) {
@@ -16380,36 +16110,40 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       this._resFn = resFn;
       this._timeFn = timeFn;
       this._s = s;
-      this._first = true;
-      this._hasResult = false;
       __super__.call(this);
     }
 
-    function scheduleRecursive(self, recurse) {
-      self._hasResult && self._o.onNext(self._state);
+    function scheduleRecursive(state, recurse) {
+      state.hasResult && state.o.onNext(state.result);
 
-      if (self._first) {
-        self._first = false;
+      if (state.first) {
+        state.first = false;
       } else {
-        self._state = tryCatch(self._itrFn)(self._state);
-        if (self._state === errorObj) { return self._o.onError(self._state.e); }
+        state.newState = tryCatch(state.self._itrFn)(state.newState);
+        if (state.newState === errorObj) { return state.o.onError(state.newState.e); }
       }
-      self._hasResult = tryCatch(self._cndFn)(self._state);
-      if (self._hasResult === errorObj) { return self._o.onError(self._hasResult.e); }
-      if (self._hasResult) {
-        var result = tryCatch(self._resFn)(self._state);
-        if (result === errorObj) { return self._o.onError(result.e); }
-        var time = tryCatch(self._timeFn)(self._state);
-        if (time === errorObj) { return self._o.onError(time.e); }
-        recurse(self, time);
+      state.hasResult = tryCatch(state.self._cndFn)(state.newState);
+      if (state.hasResult === errorObj) { return state.o.onError(state.hasResult.e); }
+      if (state.hasResult) {
+        state.result = tryCatch(state.self._resFn)(state.newState);
+        if (state.result === errorObj) { return state.o.onError(state.result.e); }
+        var time = tryCatch(state.self._timeFn)(state.newState);
+        if (time === errorObj) { return state.o.onError(time.e); }
+        recurse(state, time);
       } else {
-        self._o.onCompleted();
+        state.o.onCompleted();
       }
     }
 
     GenerateAbsoluteObservable.prototype.subscribeCore = function (o) {
-      this._o = o;
-      return this._s.scheduleRecursiveFuture(this, new Date(this._s.now()), scheduleRecursive);
+      var state = {
+        o: o,
+        self: this,
+        newState: this._state,
+        first: true,
+        hasResult: false
+      };
+      return this._s.scheduleRecursiveFuture(state, new Date(this._s.now()), scheduleRecursive);
     };
 
     return GenerateAbsoluteObservable;
@@ -16448,36 +16182,41 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
       this._resFn = resFn;
       this._timeFn = timeFn;
       this._s = s;
-      this._first = true;
-      this._hasResult = false;
       __super__.call(this);
     }
 
-    function scheduleRecursive(self, recurse) {
-      self._hasResult && self._o.onNext(self._state);
+    function scheduleRecursive(state, recurse) {
+      state.hasResult && state.o.onNext(state.result);
 
-      if (self._first) {
-        self._first = false;
+      if (state.first) {
+        state.first = false;
       } else {
-        self._state = tryCatch(self._itrFn)(self._state);
-        if (self._state === errorObj) { return self._o.onError(self._state.e); }
+        state.newState = tryCatch(state.self._itrFn)(state.newState);
+        if (state.newState === errorObj) { return state.o.onError(state.newState.e); }
       }
-      self._hasResult = tryCatch(self._cndFn)(self._state);
-      if (self._hasResult === errorObj) { return self._o.onError(self._hasResult.e); }
-      if (self._hasResult) {
-        var result = tryCatch(self._resFn)(self._state);
-        if (result === errorObj) { return self._o.onError(result.e); }
-        var time = tryCatch(self._timeFn)(self._state);
-        if (time === errorObj) { return self._o.onError(time.e); }
-        recurse(self, time);
+
+      state.hasResult = tryCatch(state.self._cndFn)(state.newState);
+      if (state.hasResult === errorObj) { return state.o.onError(state.hasResult.e); }
+      if (state.hasResult) {
+        state.result = tryCatch(state.self._resFn)(state.newState);
+        if (state.result === errorObj) { return state.o.onError(state.result.e); }
+        var time = tryCatch(state.self._timeFn)(state.newState);
+        if (time === errorObj) { return state.o.onError(time.e); }
+        recurse(state, time);
       } else {
-        self._o.onCompleted();
+        state.o.onCompleted();
       }
     }
 
     GenerateRelativeObservable.prototype.subscribeCore = function (o) {
-      this._o = o;
-      return this._s.scheduleRecursiveFuture(this, 0, scheduleRecursive);
+      var state = {
+        o: o,
+        self: this,
+        newState: this._state,
+        first: true,
+        hasResult: false
+      };
+      return this._s.scheduleRecursiveFuture(state, 0, scheduleRecursive);
     };
 
     return GenerateRelativeObservable;
@@ -17027,13 +16766,14 @@ Observable.fromNodeCallback = function (fn, ctx, selector) {
     return new SwitchFirstObservable(this);
   };
 
-observableProto.flatMapFirst = observableProto.selectManyFirst = function(selector, resultSelector, thisArg) {
+observableProto.flatMapFirst = observableProto.exhaustMap = function(selector, resultSelector, thisArg) {
     return new FlatMapObservable(this, selector, resultSelector, thisArg).switchFirst();
 };
 
-Rx.Observable.prototype.flatMapWithMaxConcurrent = function(limit, selector, resultSelector, thisArg) {
+observableProto.flatMapWithMaxConcurrent = observableProto.flatMapMaxConcurrent = function(limit, selector, resultSelector, thisArg) {
     return new FlatMapObservable(this, selector, resultSelector, thisArg).merge(limit);
 };
+
   /** Provides a set of extension methods for virtual time scheduling. */
   var VirtualTimeScheduler = Rx.VirtualTimeScheduler = (function (__super__) {
     inherits(VirtualTimeScheduler, __super__);
@@ -17878,7 +17618,7 @@ var ReactiveTest = Rx.ReactiveTest = {
        * Indicates whether the subject has observers subscribed to it.
        * @returns {Boolean} Indicates whether the subject has observers subscribed to it.
        */
-      hasObservers: function () { return this.observers.length > 0; },
+      hasObservers: function () { checkDisposed(this); return this.observers.length > 0; },
       /**
        * Notifies all subscribed observers about the end of the sequence.
        */
@@ -17988,10 +17728,7 @@ var ReactiveTest = Rx.ReactiveTest = {
        * Indicates whether the subject has observers subscribed to it.
        * @returns {Boolean} Indicates whether the subject has observers subscribed to it.
        */
-      hasObservers: function () {
-        checkDisposed(this);
-        return this.observers.length > 0;
-      },
+      hasObservers: function () { checkDisposed(this); return this.observers.length > 0; },
       /**
        * Notifies all subscribed observers about the end of the sequence, also causing the last received value to be sent out (if any).
        */
@@ -18105,7 +17842,7 @@ var ReactiveTest = Rx.ReactiveTest = {
        * Indicates whether the subject has observers subscribed to it.
        * @returns {Boolean} Indicates whether the subject has observers subscribed to it.
        */
-      hasObservers: function () { return this.observers.length > 0; },
+      hasObservers: function () { checkDisposed(this); return this.observers.length > 0; },
       /**
        * Notifies all subscribed observers about the end of the sequence.
        */
@@ -18223,9 +17960,7 @@ var ReactiveTest = Rx.ReactiveTest = {
        * Indicates whether the subject has observers subscribed to it.
        * @returns {Boolean} Indicates whether the subject has observers subscribed to it.
        */
-      hasObservers: function () {
-        return this.observers.length > 0;
-      },
+      hasObservers: function () { checkDisposed(this); return this.observers.length > 0; },
       _trim: function (now) {
         while (this.q.length > this.bufferSize) {
           this.q.shift();
@@ -18370,7 +18105,7 @@ var ReactiveTest = Rx.ReactiveTest = {
 }.call(this));
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":66}],69:[function(require,module,exports){
+},{"_process":60}],63:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18410,7 +18145,7 @@ function classNameFromVNode(vNode) {
 
   return cn.trim();
 }
-},{"./selectorParser":70}],70:[function(require,module,exports){
+},{"./selectorParser":64}],64:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18468,7 +18203,7 @@ function selectorParser() {
     className: classes.join(' ')
   };
 }
-},{"browser-split":2}],71:[function(require,module,exports){
+},{"browser-split":2}],65:[function(require,module,exports){
 
 // All SVG children elements, not in this list, should self-close
 
@@ -18490,191 +18225,202 @@ module.exports = {
   'desc': true,
   'metadata': true,
   'title': true
-}
+};
+},{}],66:[function(require,module,exports){
 
-},{}],72:[function(require,module,exports){
+var init = require('./init');
 
-var init = require('./init')
+module.exports = init([require('./modules/attributes'), require('./modules/style')]);
+},{"./init":67,"./modules/attributes":68,"./modules/style":69}],67:[function(require,module,exports){
 
-module.exports = init([
-  require('./modules/attributes'),
-  require('./modules/style')
-])
+var parseSelector = require('./parse-selector');
+var VOID_ELEMENTS = require('./void-elements');
+var CONTAINER_ELEMENTS = require('./container-elements');
 
-},{"./init":73,"./modules/attributes":74,"./modules/style":75}],73:[function(require,module,exports){
-
-var parseSelector = require('./parse-selector')
-var VOID_ELEMENTS = require('./void-elements')
-var CONTAINER_ELEMENTS = require('./container-elements')
-
-module.exports = function init (modules) {
-  function parse (data) {
-    return modules
-      .reduce(function (arr, fn) {
-        arr.push(fn(data))
-        return arr
-      }, [])
-      .filter(function (result) {
-        return result !== ''
-      })
+module.exports = function init(modules) {
+  function parse(data) {
+    return modules.reduce(function (arr, fn) {
+      arr.push(fn(data));
+      return arr;
+    }, []).filter(function (result) {
+      return result !== '';
+    });
   }
 
-  return function renderToString (vnode) {
+  return function renderToString(vnode) {
     if (!vnode.sel && vnode.text) {
-      return vnode.text
+      return vnode.text;
     }
 
-    vnode.data = vnode.data || {}
+    vnode.data = vnode.data || {};
 
-    var tagName = parseSelector(vnode.sel).tagName
-    var attributes = parse(vnode)
-    var svg = vnode.data.ns === 'http://www.w3.org/2000/svg'
-    var tag = []
+    // Support thunks
+    if (typeof vnode.sel === 'string' && vnode.sel.slice(0, 5) === 'thunk') {
+      vnode = vnode.data.fn.apply(null, vnode.data.args);
+    }
+
+    var tagName = parseSelector(vnode.sel).tagName;
+    var attributes = parse(vnode);
+    var svg = vnode.data.ns === 'http://www.w3.org/2000/svg';
+    var tag = [];
 
     // Open tag
-    tag.push('<' + tagName)
+    tag.push('<' + tagName);
     if (attributes.length) {
-      tag.push(' ' + attributes.join(' '))
+      tag.push(' ' + attributes.join(' '));
     }
     if (svg && CONTAINER_ELEMENTS[tagName] !== true) {
-      tag.push(' /')
+      tag.push(' /');
     }
-    tag.push('>')
+    tag.push('>');
 
     // Close tag, if needed
-    if ((VOID_ELEMENTS[tagName] !== true && !svg) ||
-        (svg && CONTAINER_ELEMENTS[tagName] === true)) {
-      if (vnode.text) {
-        tag.push(vnode.text)
+    if (VOID_ELEMENTS[tagName] !== true && !svg || svg && CONTAINER_ELEMENTS[tagName] === true) {
+      if (vnode.data.props && vnode.data.props.innerHTML) {
+        tag.push(vnode.data.props.innerHTML);
+      } else if (vnode.text) {
+        tag.push(vnode.text);
       } else if (vnode.children) {
         vnode.children.forEach(function (child) {
-          tag.push(renderToString(child))
-        })
+          tag.push(renderToString(child));
+        });
       }
-      tag.push(`</${tagName}>`)
+      tag.push('</' + tagName + '>');
     }
 
-    return tag.join('')
-  }
-}
+    return tag.join('');
+  };
+};
+},{"./container-elements":65,"./parse-selector":70,"./void-elements":71}],68:[function(require,module,exports){
 
-},{"./container-elements":71,"./parse-selector":76,"./void-elements":77}],74:[function(require,module,exports){
+var forOwn = require('lodash.forown');
+var escape = require('lodash.escape');
+var union = require('lodash.union');
 
-var forOwn = require('lodash.forown')
-var escape = require('lodash.escape')
-var union = require('lodash.union')
-
-var parseSelector = require('../parse-selector')
+var parseSelector = require('../parse-selector');
 
 // data.attrs, data.props, data.class
 
-module.exports = function attributes (vnode) {
-  var selector = parseSelector(vnode.sel)
-  var parsedClasses = selector.className.split(' ')
+module.exports = function attributes(vnode) {
+  var selector = parseSelector(vnode.sel);
+  var parsedClasses = selector.className.split(' ');
 
-  var attributes = []
-  var classes = []
-  var values = {}
+  var attributes = [];
+  var classes = [];
+  var values = {};
 
   if (selector.id) {
-    values.id = selector.id
+    values.id = selector.id;
   }
 
-  setAttributes(vnode.data.props, values)
-  setAttributes(vnode.data.attrs, values) // `attrs` override `props`, not sure if this is good so
+  setAttributes(vnode.data.props, values);
+  setAttributes(vnode.data.attrs, values); // `attrs` override `props`, not sure if this is good so
 
   if (vnode.data.class) {
     // Omit `className` attribute if `class` is set on vnode
-    values.class = undefined
+    values.class = undefined;
   }
   forOwn(vnode.data.class, function (value, key) {
     if (value === true) {
-      classes.push(key)
+      classes.push(key);
     }
-  })
-  classes = union(classes, values.class, parsedClasses).filter(x => x !== '')
+  });
+  classes = union(classes, values.class, parsedClasses).filter(function (x) {
+    return x !== '';
+  });
 
   if (classes.length) {
-    values.class = classes.join(' ')
+    values.class = classes.join(' ');
   }
 
   forOwn(values, function (value, key) {
-    attributes.push(value === true ? key : `${key}="${escape(value)}"`)
-  })
+    attributes.push(value === true ? key : key + '="' + escape(value) + '"');
+  });
 
-  return attributes.length ? attributes.join(' ') : ''
-}
+  return attributes.length ? attributes.join(' ') : '';
+};
 
-function setAttributes (values, target) {
+function setAttributes(values, target) {
   forOwn(values, function (value, key) {
     if (key === 'htmlFor') {
-      target['for'] = value
-      return
+      target['for'] = value;
+      return;
     }
     if (key === 'className') {
-      target['class'] = value.split(' ')
-      return
+      target['class'] = value.split(' ');
+      return;
     }
-    target[key] = value
-  })
+    if (key === 'innerHTML') {
+      return;
+    }
+    target[key] = value;
+  });
 }
+},{"../parse-selector":70,"lodash.escape":50,"lodash.forown":51,"lodash.union":57}],69:[function(require,module,exports){
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-},{"../parse-selector":76,"lodash.escape":56,"lodash.forown":57,"lodash.union":63}],75:[function(require,module,exports){
-
-var forOwn = require('lodash.forown')
-var escape = require('lodash.escape')
-var kebabCase = require('lodash.kebabcase')
+var forOwn = require('lodash.forown');
+var escape = require('lodash.escape');
+var kebabCase = require('lodash.kebabcase');
 
 // data.style
 
-module.exports = function style (vnode) {
-  var styles = []
+module.exports = function style(vnode) {
+  var styles = [];
+  var style = vnode.data.style || {};
 
-  forOwn(vnode.data.style, function (value, key) {
-    styles.push(`${kebabCase(key)}: ${escape(value)}`)
-  })
+  // merge in `delayed` properties
+  if (style.delayed) {
+    _extends(style, style.delayed);
+  }
 
-  return styles.length ? `style="${styles.join('; ')}"` : ''
-}
+  forOwn(style, function (value, key) {
+    // omit hook objects
+    if (typeof value === 'string') {
+      styles.push(kebabCase(key) + ': ' + escape(value));
+    }
+  });
 
-},{"lodash.escape":56,"lodash.forown":57,"lodash.kebabcase":60}],76:[function(require,module,exports){
+  return styles.length ? 'style="' + styles.join('; ') + '"' : '';
+};
+},{"lodash.escape":50,"lodash.forown":51,"lodash.kebabcase":54}],70:[function(require,module,exports){
 
 // https://github.com/Matt-Esch/virtual-dom/blob/master/virtual-hyperscript/parse-tag.js
 
-var split = require('browser-split')
+var split = require('browser-split');
 
-var classIdSplit = /([\.#]?[a-zA-Z0-9\u007F-\uFFFF_:-]+)/
-var notClassId = /^\.|#/
+var classIdSplit = /([\.#]?[a-zA-Z0-9\u007F-\uFFFF_:-]+)/;
+var notClassId = /^\.|#/;
 
-module.exports = function parseSelector (selector, upper) {
-  selector = selector || ''
-  var tagName
-  var id = ''
-  var classes = []
+module.exports = function parseSelector(selector, upper) {
+  selector = selector || '';
+  var tagName;
+  var id = '';
+  var classes = [];
 
-  var tagParts = split(selector, classIdSplit)
+  var tagParts = split(selector, classIdSplit);
 
   if (notClassId.test(tagParts[1]) || selector === '') {
-    tagName = 'div'
+    tagName = 'div';
   }
 
-  var part, type, i
+  var part, type, i;
 
   for (i = 0; i < tagParts.length; i++) {
-    part = tagParts[i]
+    part = tagParts[i];
 
     if (!part) {
-      continue
+      continue;
     }
 
-    type = part.charAt(0)
+    type = part.charAt(0);
 
     if (!tagName) {
-      tagName = part
+      tagName = part;
     } else if (type === '.') {
-      classes.push(part.substring(1, part.length))
+      classes.push(part.substring(1, part.length));
     } else if (type === '#') {
-      id = part.substring(1, part.length)
+      id = part.substring(1, part.length);
     }
   }
 
@@ -18682,10 +18428,9 @@ module.exports = function parseSelector (selector, upper) {
     tagName: upper === true ? tagName.toUpperCase() : tagName,
     id: id,
     className: classes.join(' ')
-  }
-}
-
-},{"browser-split":2}],77:[function(require,module,exports){
+  };
+};
+},{"browser-split":2}],71:[function(require,module,exports){
 
 // http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
 
@@ -18705,9 +18450,8 @@ module.exports = {
   source: true,
   track: true,
   wbr: true
-}
-
-},{}],78:[function(require,module,exports){
+};
+},{}],72:[function(require,module,exports){
 var VNode = require('./vnode');
 var is = require('./is');
 
@@ -18742,13 +18486,69 @@ module.exports = function h(sel, b, c) {
   return VNode(sel, data, children, text, undefined);
 };
 
-},{"./is":79,"./vnode":86}],79:[function(require,module,exports){
+},{"./is":74,"./vnode":83}],73:[function(require,module,exports){
+function createElement(tagName){
+  return document.createElement(tagName);
+}
+
+function createElementNS(namespaceURI, qualifiedName){
+  return document.createElementNS(namespaceURI, qualifiedName);
+}
+
+function createTextNode(text){
+  return document.createTextNode(text);
+}
+
+
+function insertBefore(parentNode, newNode, referenceNode){
+  parentNode.insertBefore(newNode, referenceNode);
+}
+
+
+function removeChild(node, child){
+  node.removeChild(child);
+}
+
+function appendChild(node, child){
+  node.appendChild(child);
+}
+
+function parentNode(node){
+  return node.parentElement;
+}
+
+function nextSibling(node){
+  return node.nextSibling;
+}
+
+function tagName(node){
+  return node.tagName;
+}
+
+function setTextContent(node, text){
+  node.textContent = text;
+}
+
+module.exports = {
+  createElement: createElement,
+  createElementNS: createElementNS,
+  createTextNode: createTextNode,
+  appendChild: appendChild,
+  removeChild: removeChild,
+  insertBefore: insertBefore,
+  parentNode: parentNode,
+  nextSibling: nextSibling,
+  tagName: tagName,
+  setTextContent: setTextContent
+};
+
+},{}],74:[function(require,module,exports){
 module.exports = {
   array: Array.isArray,
   primitive: function(s) { return typeof s === 'string' || typeof s === 'number'; },
 };
 
-},{}],80:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 var booleanAttrs = ["allowfullscreen", "async", "autofocus", "autoplay", "checked", "compact", "controls", "declare", 
                 "default", "defaultchecked", "defaultmuted", "defaultselected", "defer", "disabled", "draggable", 
                 "enabled", "formnovalidate", "hidden", "indeterminate", "inert", "ismap", "itemscope", "loop", "multiple", 
@@ -18789,7 +18589,7 @@ function updateAttrs(oldVnode, vnode) {
 
 module.exports = {create: updateAttrs, update: updateAttrs};
 
-},{}],81:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 function updateClass(oldVnode, vnode) {
   var cur, name, elm = vnode.elm,
       oldClass = oldVnode.data.class || {},
@@ -18809,7 +18609,7 @@ function updateClass(oldVnode, vnode) {
 
 module.exports = {create: updateClass, update: updateClass};
 
-},{}],82:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 var is = require('../is');
 
 function arrInvoker(arr) {
@@ -18852,7 +18652,161 @@ function updateEventListeners(oldVnode, vnode) {
 
 module.exports = {create: updateEventListeners, update: updateEventListeners};
 
-},{"../is":79}],83:[function(require,module,exports){
+},{"../is":74}],78:[function(require,module,exports){
+var raf = (typeof window !== 'undefined' && window.requestAnimationFrame) || setTimeout;
+var nextFrame = function(fn) { raf(function() { raf(fn); }); };
+
+function setNextFrame(obj, prop, val) {
+  nextFrame(function() { obj[prop] = val; });
+}
+
+function getTextNodeRect(textNode) {
+  var rect;
+  if (document.createRange) {
+    var range = document.createRange();
+    range.selectNodeContents(textNode);
+    if (range.getBoundingClientRect) {
+        rect = range.getBoundingClientRect();
+    }
+  }
+  return rect;
+}
+
+function calcTransformOrigin(isTextNode, textRect, boundingRect) {
+  if (isTextNode) {
+    if (textRect) {
+      //calculate pixels to center of text from left edge of bounding box
+      var relativeCenterX = textRect.left + textRect.width/2 - boundingRect.left;
+      var relativeCenterY = textRect.top + textRect.height/2 - boundingRect.top;
+      return relativeCenterX + 'px ' + relativeCenterY + 'px';
+    }
+  }
+  return '0 0'; //top left
+}
+
+function getTextDx(oldTextRect, newTextRect) {
+  if (oldTextRect && newTextRect) {
+    return ((oldTextRect.left + oldTextRect.width/2) - (newTextRect.left + newTextRect.width/2));
+  }
+  return 0;
+}
+function getTextDy(oldTextRect, newTextRect) {
+  if (oldTextRect && newTextRect) {
+    return ((oldTextRect.top + oldTextRect.height/2) - (newTextRect.top + newTextRect.height/2));
+  }
+  return 0;
+}
+
+function isTextElement(elm) {
+  return elm.childNodes.length === 1 && elm.childNodes[0].nodeType === 3;
+}
+
+var removed, created;
+
+function pre(oldVnode, vnode) {
+  removed = {};
+  created = [];
+}
+
+function create(oldVnode, vnode) {
+  var hero = vnode.data.hero;
+  if (hero && hero.id) {
+    created.push(hero.id);
+    created.push(vnode);
+  }
+}
+
+function destroy(vnode) {
+  var hero = vnode.data.hero;
+  if (hero && hero.id) {
+    var elm = vnode.elm;
+    vnode.isTextNode = isTextElement(elm); //is this a text node?
+    vnode.boundingRect = elm.getBoundingClientRect(); //save the bounding rectangle to a new property on the vnode
+    vnode.textRect = vnode.isTextNode ? getTextNodeRect(elm.childNodes[0]) : null; //save bounding rect of inner text node
+    var computedStyle = window.getComputedStyle(elm, null); //get current styles (includes inherited properties)
+    vnode.savedStyle = JSON.parse(JSON.stringify(computedStyle)); //save a copy of computed style values
+    removed[hero.id] = vnode;
+  }
+}
+
+function post() {
+  var i, id, newElm, oldVnode, oldElm, hRatio, wRatio,
+      oldRect, newRect, dx, dy, origTransform, origTransition,
+      newStyle, oldStyle, newComputedStyle, isTextNode,
+      newTextRect, oldTextRect;
+  for (i = 0; i < created.length; i += 2) {
+    id = created[i];
+    newElm = created[i+1].elm;
+    oldVnode = removed[id];
+    if (oldVnode) {
+      isTextNode = oldVnode.isTextNode && isTextElement(newElm); //Are old & new both text?
+      newStyle = newElm.style;
+      newComputedStyle = window.getComputedStyle(newElm, null); //get full computed style for new element
+      oldElm = oldVnode.elm;
+      oldStyle = oldElm.style;
+      //Overall element bounding boxes
+      newRect = newElm.getBoundingClientRect();
+      oldRect = oldVnode.boundingRect; //previously saved bounding rect
+      //Text node bounding boxes & distances
+      if (isTextNode) {
+        newTextRect = getTextNodeRect(newElm.childNodes[0]);
+        oldTextRect = oldVnode.textRect;
+        dx = getTextDx(oldTextRect, newTextRect);
+        dy = getTextDy(oldTextRect, newTextRect);
+      } else {
+        //Calculate distances between old & new positions
+        dx = oldRect.left - newRect.left;
+        dy = oldRect.top - newRect.top;
+      }
+      hRatio = newRect.height / (Math.max(oldRect.height, 1));
+      wRatio = isTextNode ? hRatio : newRect.width / (Math.max(oldRect.width, 1)); //text scales based on hRatio
+      // Animate new element
+      origTransform = newStyle.transform;
+      origTransition = newStyle.transition;
+      if (newComputedStyle.display === 'inline') //inline elements cannot be transformed
+        newStyle.display = 'inline-block';        //this does not appear to have any negative side effects
+      newStyle.transition = origTransition + 'transform 0s';
+      newStyle.transformOrigin = calcTransformOrigin(isTextNode, newTextRect, newRect);
+      newStyle.opacity = '0';
+      newStyle.transform = origTransform + 'translate('+dx+'px, '+dy+'px) ' +
+                               'scale('+1/wRatio+', '+1/hRatio+')';
+      setNextFrame(newStyle, 'transition', origTransition);
+      setNextFrame(newStyle, 'transform', origTransform);
+      setNextFrame(newStyle, 'opacity', '1');
+      // Animate old element
+      for (var key in oldVnode.savedStyle) { //re-apply saved inherited properties
+        if (parseInt(key) != key) {
+          var ms = key.substring(0,2) === 'ms';
+          var moz = key.substring(0,3) === 'moz';
+          var webkit = key.substring(0,6) === 'webkit';
+      	  if (!ms && !moz && !webkit) //ignore prefixed style properties
+        	  oldStyle[key] = oldVnode.savedStyle[key];
+        }
+      }
+      oldStyle.position = 'absolute';
+      oldStyle.top = oldRect.top + 'px'; //start at existing position
+      oldStyle.left = oldRect.left + 'px';
+      oldStyle.width = oldRect.width + 'px'; //Needed for elements who were sized relative to their parents
+      oldStyle.height = oldRect.height + 'px'; //Needed for elements who were sized relative to their parents
+      oldStyle.margin = 0; //Margin on hero element leads to incorrect positioning
+      oldStyle.transformOrigin = calcTransformOrigin(isTextNode, oldTextRect, oldRect);
+      oldStyle.transform = '';
+      oldStyle.opacity = '1';
+      document.body.appendChild(oldElm);
+      setNextFrame(oldStyle, 'transform', 'translate('+ -dx +'px, '+ -dy +'px) scale('+wRatio+', '+hRatio+')'); //scale must be on far right for translate to be correct
+      setNextFrame(oldStyle, 'opacity', '0');
+      oldElm.addEventListener('transitionend', function(ev) {
+        if (ev.propertyName === 'transform')
+          document.body.removeChild(ev.target);
+      });
+    }
+  }
+  removed = created = undefined;
+}
+
+module.exports = {pre: pre, create: create, destroy: destroy, post: post};
+
+},{}],79:[function(require,module,exports){
 function updateProps(oldVnode, vnode) {
   var key, cur, old, elm = vnode.elm,
       oldProps = oldVnode.data.props || {}, props = vnode.data.props || {};
@@ -18864,7 +18818,7 @@ function updateProps(oldVnode, vnode) {
   for (key in props) {
     cur = props[key];
     old = oldProps[key];
-    if (old !== cur) {
+    if (old !== cur && (key !== 'value' || elm[key] !== cur)) {
       elm[key] = cur;
     }
   }
@@ -18872,20 +18826,83 @@ function updateProps(oldVnode, vnode) {
 
 module.exports = {create: updateProps, update: updateProps};
 
-},{}],84:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
+var raf = (typeof window !== 'undefined' && window.requestAnimationFrame) || setTimeout;
+var nextFrame = function(fn) { raf(function() { raf(fn); }); };
+
+function setNextFrame(obj, prop, val) {
+  nextFrame(function() { obj[prop] = val; });
+}
+
+function updateStyle(oldVnode, vnode) {
+  var cur, name, elm = vnode.elm,
+      oldStyle = oldVnode.data.style || {},
+      style = vnode.data.style || {},
+      oldHasDel = 'delayed' in oldStyle;
+  for (name in oldStyle) {
+    if (!style[name]) {
+      elm.style[name] = '';
+    }
+  }
+  for (name in style) {
+    cur = style[name];
+    if (name === 'delayed') {
+      for (name in style.delayed) {
+        cur = style.delayed[name];
+        if (!oldHasDel || cur !== oldStyle.delayed[name]) {
+          setNextFrame(elm.style, name, cur);
+        }
+      }
+    } else if (name !== 'remove' && cur !== oldStyle[name]) {
+      elm.style[name] = cur;
+    }
+  }
+}
+
+function applyDestroyStyle(vnode) {
+  var style, name, elm = vnode.elm, s = vnode.data.style;
+  if (!s || !(style = s.destroy)) return;
+  for (name in style) {
+    elm.style[name] = style[name];
+  }
+}
+
+function applyRemoveStyle(vnode, rm) {
+  var s = vnode.data.style;
+  if (!s || !s.remove) {
+    rm();
+    return;
+  }
+  var name, elm = vnode.elm, idx, i = 0, maxDur = 0,
+      compStyle, style = s.remove, amount = 0, applied = [];
+  for (name in style) {
+    applied.push(name);
+    elm.style[name] = style[name];
+  }
+  compStyle = getComputedStyle(elm);
+  var props = compStyle['transition-property'].split(', ');
+  for (; i < props.length; ++i) {
+    if(applied.indexOf(props[i]) !== -1) amount++;
+  }
+  elm.addEventListener('transitionend', function(ev) {
+    if (ev.target === elm) --amount;
+    if (amount === 0) rm();
+  });
+}
+
+module.exports = {create: updateStyle, update: updateStyle, destroy: applyDestroyStyle, remove: applyRemoveStyle};
+
+},{}],81:[function(require,module,exports){
 // jshint newcap: false
-/* global require, module, document, Element */
+/* global require, module, document, Node */
 'use strict';
 
 var VNode = require('./vnode');
 var is = require('./is');
+var domApi = require('./htmldomapi.js');
 
 function isUndef(s) { return s === undefined; }
 function isDef(s) { return s !== undefined; }
-
-function emptyNodeAt(elm) {
-  return VNode(elm.tagName, {}, [], undefined, elm);
-}
 
 var emptyNode = VNode('', {}, [], undefined, undefined);
 
@@ -18902,16 +18919,13 @@ function createKeyToOldIdx(children, beginIdx, endIdx) {
   return map;
 }
 
-function createRmCb(childElm, listeners) {
-  return function() {
-    if (--listeners === 0) childElm.parentElement.removeChild(childElm);
-  };
-}
-
 var hooks = ['create', 'update', 'remove', 'destroy', 'pre', 'post'];
 
-function init(modules) {
+function init(modules, api) {
   var i, j, cbs = {};
+
+  if (isUndef(api)) api = domApi;
+
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = [];
     for (j = 0; j < modules.length; ++j) {
@@ -18919,11 +18933,27 @@ function init(modules) {
     }
   }
 
+  function emptyNodeAt(elm) {
+    return VNode(api.tagName(elm).toLowerCase(), {}, [], undefined, elm);
+  }
+
+  function createRmCb(childElm, listeners) {
+    return function() {
+      if (--listeners === 0) {
+        var parent = api.parentNode(childElm);
+        api.removeChild(parent, childElm);
+      }
+    };
+  }
+
   function createElm(vnode, insertedVnodeQueue) {
-    var i, data = vnode.data;
+    var i, thunk, data = vnode.data;
     if (isDef(data)) {
       if (isDef(i = data.hook) && isDef(i = i.init)) i(vnode);
-      if (isDef(i = data.vnode)) vnode = i;
+      if (isDef(i = data.vnode)) {
+          thunk = vnode;
+          vnode = i;
+      }
     }
     var elm, children = vnode.children, sel = vnode.sel;
     if (isDef(sel)) {
@@ -18933,16 +18963,16 @@ function init(modules) {
       var hash = hashIdx > 0 ? hashIdx : sel.length;
       var dot = dotIdx > 0 ? dotIdx : sel.length;
       var tag = hashIdx !== -1 || dotIdx !== -1 ? sel.slice(0, Math.min(hash, dot)) : sel;
-      elm = vnode.elm = isDef(data) && isDef(i = data.ns) ? document.createElementNS(i, tag)
-                                                          : document.createElement(tag);
+      elm = vnode.elm = isDef(data) && isDef(i = data.ns) ? api.createElementNS(i, tag)
+                                                          : api.createElement(tag);
       if (hash < dot) elm.id = sel.slice(hash + 1, dot);
       if (dotIdx > 0) elm.className = sel.slice(dot+1).replace(/\./g, ' ');
       if (is.array(children)) {
         for (i = 0; i < children.length; ++i) {
-          elm.appendChild(createElm(children[i], insertedVnodeQueue));
+          api.appendChild(elm, createElm(children[i], insertedVnodeQueue));
         }
       } else if (is.primitive(vnode.text)) {
-        elm.appendChild(document.createTextNode(vnode.text));
+        api.appendChild(elm, api.createTextNode(vnode.text));
       }
       for (i = 0; i < cbs.create.length; ++i) cbs.create[i](emptyNode, vnode);
       i = vnode.data.hook; // Reuse variable
@@ -18951,27 +18981,29 @@ function init(modules) {
         if (i.insert) insertedVnodeQueue.push(vnode);
       }
     } else {
-      elm = vnode.elm = document.createTextNode(vnode.text);
+      elm = vnode.elm = api.createTextNode(vnode.text);
     }
+    if (isDef(thunk)) thunk.elm = vnode.elm;
     return vnode.elm;
   }
 
   function addVnodes(parentElm, before, vnodes, startIdx, endIdx, insertedVnodeQueue) {
     for (; startIdx <= endIdx; ++startIdx) {
-      parentElm.insertBefore(createElm(vnodes[startIdx], insertedVnodeQueue), before);
+      api.insertBefore(parentElm, createElm(vnodes[startIdx], insertedVnodeQueue), before);
     }
   }
 
   function invokeDestroyHook(vnode) {
-    var i = vnode.data, j;
-    if (isDef(i)) {
-      if (isDef(i = i.hook) && isDef(i = i.destroy)) i(vnode);
+    var i, j, data = vnode.data;
+    if (isDef(data)) {
+      if (isDef(i = data.hook) && isDef(i = i.destroy)) i(vnode);
       for (i = 0; i < cbs.destroy.length; ++i) cbs.destroy[i](vnode);
       if (isDef(i = vnode.children)) {
         for (j = 0; j < vnode.children.length; ++j) {
           invokeDestroyHook(vnode.children[j]);
         }
       }
+      if (isDef(i = data.vnode)) invokeDestroyHook(i);
     }
   }
 
@@ -18990,7 +19022,7 @@ function init(modules) {
             rm();
           }
         } else { // Text node
-          parentElm.removeChild(ch.elm);
+          api.removeChild(parentElm, ch.elm);
         }
       }
     }
@@ -19021,25 +19053,25 @@ function init(modules) {
         newEndVnode = newCh[--newEndIdx];
       } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
         patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue);
-        parentElm.insertBefore(oldStartVnode.elm, oldEndVnode.elm.nextSibling);
+        api.insertBefore(parentElm, oldStartVnode.elm, api.nextSibling(oldEndVnode.elm));
         oldStartVnode = oldCh[++oldStartIdx];
         newEndVnode = newCh[--newEndIdx];
       } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
         patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue);
-        parentElm.insertBefore(oldEndVnode.elm, oldStartVnode.elm);
+        api.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm);
         oldEndVnode = oldCh[--oldEndIdx];
         newStartVnode = newCh[++newStartIdx];
       } else {
         if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
         idxInOld = oldKeyToIdx[newStartVnode.key];
         if (isUndef(idxInOld)) { // New element
-          parentElm.insertBefore(createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
+          api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
           newStartVnode = newCh[++newStartIdx];
         } else {
           elmToMove = oldCh[idxInOld];
           patchVnode(elmToMove, newStartVnode, insertedVnodeQueue);
           oldCh[idxInOld] = undefined;
-          parentElm.insertBefore(elmToMove.elm, oldStartVnode.elm);
+          api.insertBefore(parentElm, elmToMove.elm, oldStartVnode.elm);
           newStartVnode = newCh[++newStartIdx];
         }
       }
@@ -19058,9 +19090,20 @@ function init(modules) {
       i(oldVnode, vnode);
     }
     if (isDef(i = oldVnode.data) && isDef(i = i.vnode)) oldVnode = i;
-    if (isDef(i = vnode.data) && isDef(i = i.vnode)) vnode = i;
+    if (isDef(i = vnode.data) && isDef(i = i.vnode)) {
+      patchVnode(oldVnode, i, insertedVnodeQueue);
+      vnode.elm = i.elm;
+      return;
+    }
     var elm = vnode.elm = oldVnode.elm, oldCh = oldVnode.children, ch = vnode.children;
     if (oldVnode === vnode) return;
+    if (!sameVnode(oldVnode, vnode)) {
+      var parentElm = api.parentNode(oldVnode.elm);
+      elm = createElm(vnode, insertedVnodeQueue);
+      api.insertBefore(parentElm, elm, oldVnode.elm);
+      removeVnodes(parentElm, [oldVnode], 0, 0);
+      return;
+    }
     if (isDef(vnode.data)) {
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode);
       i = vnode.data.hook;
@@ -19070,12 +19113,15 @@ function init(modules) {
       if (isDef(oldCh) && isDef(ch)) {
         if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue);
       } else if (isDef(ch)) {
+        if (isDef(oldVnode.text)) api.setTextContent(elm, '');
         addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
       } else if (isDef(oldCh)) {
         removeVnodes(elm, oldCh, 0, oldCh.length - 1);
+      } else if (isDef(oldVnode.text)) {
+        api.setTextContent(elm, '');
       }
     } else if (oldVnode.text !== vnode.text) {
-      elm.textContent = vnode.text;
+      api.setTextContent(elm, vnode.text);
     }
     if (isDef(hook) && isDef(i = hook.postpatch)) {
       i(oldVnode, vnode);
@@ -19083,20 +19129,28 @@ function init(modules) {
   }
 
   return function(oldVnode, vnode) {
-    var i;
+    var i, elm, parent;
     var insertedVnodeQueue = [];
     for (i = 0; i < cbs.pre.length; ++i) cbs.pre[i]();
-    if (oldVnode instanceof Element) {
-      if (oldVnode.parentElement !== null) {
-        createElm(vnode, insertedVnodeQueue);
-        oldVnode.parentElement.replaceChild(vnode.elm, oldVnode);
-      } else {
-        oldVnode = emptyNodeAt(oldVnode);
-        patchVnode(oldVnode, vnode, insertedVnodeQueue);
-      }
-    } else {
-      patchVnode(oldVnode, vnode, insertedVnodeQueue);
+
+    if (isUndef(oldVnode.sel)) {
+      oldVnode = emptyNodeAt(oldVnode);
     }
+
+    if (sameVnode(oldVnode, vnode)) {
+      patchVnode(oldVnode, vnode, insertedVnodeQueue);
+    } else {
+      elm = oldVnode.elm;
+      parent = api.parentNode(elm);
+
+      createElm(vnode, insertedVnodeQueue);
+
+      if (parent !== null) {
+        api.insertBefore(parent, vnode.elm, api.nextSibling(elm));
+        removeVnodes(parent, [oldVnode], 0, 0);
+      }
+    }
+
     for (i = 0; i < insertedVnodeQueue.length; ++i) {
       insertedVnodeQueue[i].data.hook.insert(insertedVnodeQueue[i]);
     }
@@ -19107,7 +19161,7 @@ function init(modules) {
 
 module.exports = {init: init};
 
-},{"./is":79,"./vnode":86}],85:[function(require,module,exports){
+},{"./htmldomapi.js":73,"./is":74,"./vnode":83}],82:[function(require,module,exports){
 var h = require('./h');
 
 function init(thunk) {
@@ -19119,7 +19173,7 @@ function prepatch(oldThunk, thunk) {
   var i, old = oldThunk.data, cur = thunk.data;
   var oldArgs = old.args, args = cur.args;
   cur.vnode = old.vnode;
-  if (oldArgs.length !== args.length) {
+  if (old.fn !== cur.fn || oldArgs.length !== args.length) {
     cur.vnode = cur.fn.apply(undefined, args);
     return;
   }
@@ -19142,14 +19196,14 @@ module.exports = function(name, fn /* args */) {
   });
 };
 
-},{"./h":78}],86:[function(require,module,exports){
+},{"./h":72}],83:[function(require,module,exports){
 module.exports = function(sel, data, children, text, elm) {
   var key = data === undefined ? undefined : data.key;
   return {sel: sel, data: data, children: children,
           text: text, elm: elm, key: key};
 };
 
-},{}],87:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 'use strict';
 module.exports = function (str) {
 	return encodeURIComponent(str).replace(/[!'()*]/g, function (c) {
@@ -19157,7 +19211,7 @@ module.exports = function (str) {
 	});
 };
 
-},{}],88:[function(require,module,exports){
+},{}],85:[function(require,module,exports){
 (function (process){
 /**
  * Copyright 2014-2015, Facebook, Inc.
@@ -19221,14 +19275,14 @@ if (process.env.NODE_ENV !== 'production') {
 module.exports = warning;
 
 }).call(this,require('_process'))
-},{"_process":66}],89:[function(require,module,exports){
+},{"_process":60}],86:[function(require,module,exports){
 'use strict';
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _cycleSnabbdom = require('cycle-snabbdom');
 
@@ -19293,13 +19347,11 @@ function view(sidebar, children) {
 function App(sources) {
   var router = sources.router;
 
-  var _router$define = router.define(routes);
-
-  var path$ = _router$define.path$;
-  var value$ = _router$define.value$;
-
-  var sidebar = (0, _sidebar2.default)(sources, path$);
-  var childrenDOM$ = path$.zip(value$, function (path, value) {
+  var match$ = router.define(routes);
+  var sidebar = (0, _sidebar2.default)(sources, match$.pluck('path'));
+  var childrenDOM$ = match$.map(function (_ref) {
+    var path = _ref.path;
+    var value = _ref.value;
     return value(_extends({}, sources, { router: router.path(path) })).DOM;
   });
 
@@ -19310,7 +19362,7 @@ function App(sources) {
 
 exports.default = App;
 
-},{"./components/compose":90,"./components/home":91,"./components/inbox":95,"./components/notfound":97,"./components/sidebar":98,"cycle-snabbdom":6}],90:[function(require,module,exports){
+},{"./components/compose":87,"./components/home":88,"./components/inbox":92,"./components/notfound":94,"./components/sidebar":95,"cycle-snabbdom":6}],87:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19327,7 +19379,7 @@ function Compose() {
 
 exports.default = Compose;
 
-},{"cycle-snabbdom":6,"rx":68}],91:[function(require,module,exports){
+},{"cycle-snabbdom":6,"rx":62}],88:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19344,7 +19396,7 @@ function Home() {
 
 exports.default = Home;
 
-},{"cycle-snabbdom":6,"rx":68}],92:[function(require,module,exports){
+},{"cycle-snabbdom":6,"rx":62}],89:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19363,7 +19415,7 @@ function Built() {
 
 exports.default = Built;
 
-},{"./childStyles":93,"cycle-snabbdom":6,"rx":68}],93:[function(require,module,exports){
+},{"./childStyles":90,"cycle-snabbdom":6,"rx":62}],90:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19381,18 +19433,18 @@ var containerStyle = {
   borderLeft: '1px solid rgba(34, 34, 34, 0.4)',
   transform: "translate3d(25em, 0, 0)",
   delayed: {
-    transition: "transform 500ms",
+    transition: "all 500ms ease-in-out",
     transform: "translate3d(0, 0, 0)"
   },
   remove: {
-    transition: "transform 200ms",
+    transition: "all 500ms ease-in-out",
     transform: "translate3d(100em, 0, 0)"
   }
 };
 
 exports.containerStyle = containerStyle;
 
-},{}],94:[function(require,module,exports){
+},{}],91:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19411,7 +19463,7 @@ function Compose() {
 
 exports.default = Compose;
 
-},{"./childStyles":93,"cycle-snabbdom":6,"rx":68}],95:[function(require,module,exports){
+},{"./childStyles":90,"cycle-snabbdom":6,"rx":62}],92:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19466,8 +19518,8 @@ var linkStyle = {
   textDecoration: 'none'
 };
 
-function view(createHref, path$, children) {
-  return path$.map(function () {
+function view(createHref) {
+  return function (children) {
     return (0, _cycleSnabbdom.div)({}, [(0, _cycleSnabbdom.ul)({ style: ulStyle }, [(0, _cycleSnabbdom.li)({ style: liStyle }, [(0, _cycleSnabbdom.a)({ style: linkStyle,
       props: { href: createHref('/why') }
     }, 'Why Cyclic Router?')]), (0, _cycleSnabbdom.li)({ style: liStyle }, [(0, _cycleSnabbdom.a)({
@@ -19477,27 +19529,25 @@ function view(createHref, path$, children) {
       style: linkStyle,
       props: { href: createHref('/compose') }
     }, 'Compose a Message')])]), children]);
-  });
+  };
 }
 
 function Inbox(sources) {
   var router = sources.router;
 
-  var _router$define = router.define(routes);
+  var match$ = router.define(routes);
 
-  var path$ = _router$define.path$;
-  var value$ = _router$define.value$;
-
-  var childrenDOM$ = value$.map(function (value) {
+  var childrenDOM$ = match$.map(function (_ref) {
+    var value = _ref.value;
     return value(sources).DOM;
   });
 
-  return { DOM: view(router.createHref, path$, childrenDOM$) };
+  return { DOM: childrenDOM$.map(view(router.createHref)) };
 }
 
 exports.default = Inbox;
 
-},{"./built":92,"./compose":94,"./why":96,"cycle-snabbdom":6}],96:[function(require,module,exports){
+},{"./built":89,"./compose":91,"./why":93,"cycle-snabbdom":6}],93:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19516,7 +19566,7 @@ function Why() {
 
 exports.default = Why;
 
-},{"./childStyles":93,"cycle-snabbdom":6,"rx":68}],97:[function(require,module,exports){
+},{"./childStyles":90,"cycle-snabbdom":6,"rx":62}],94:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19533,7 +19583,7 @@ function NotFound() {
 
 exports.default = NotFound;
 
-},{"cycle-snabbdom":6,"rx":68}],98:[function(require,module,exports){
+},{"cycle-snabbdom":6,"rx":62}],95:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19567,6 +19617,7 @@ var linkStyle = {
 function Sidebar(sources, path$) {
   var createHref = sources.router.createHref;
 
+
   var inboxHref = createHref('/inbox');
   var composeHref = createHref('/compose');
   var contactHref = createHref('/contact');
@@ -19580,16 +19631,14 @@ function Sidebar(sources, path$) {
 
 exports.default = Sidebar;
 
-},{"cycle-snabbdom":6}],99:[function(require,module,exports){
+},{"cycle-snabbdom":6}],96:[function(require,module,exports){
 'use strict';
 
 var _core = require('@cycle/core');
 
 var _cycleSnabbdom = require('cycle-snabbdom');
 
-var _cyclicHistory = require('cyclic-history');
-
-var _src = require('../../src');
+var _lib = require('../../lib');
 
 var _history = require('history');
 
@@ -19599,191 +19648,14 @@ var _app2 = _interopRequireDefault(_app);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var history = (0, _history.createHashHistory)({ queryKey: false });
+
 (0, _core.run)(_app2.default, {
   DOM: (0, _cycleSnabbdom.makeDOMDriver)('#app'),
-  router: (0, _src.makeRouterDriver)((0, _cyclicHistory.makeHistoryDriver)((0, _history.createHashHistory)()))
+  router: (0, _lib.makeRouterDriver)(history)
 });
 
-},{"../../src":104,"./app":89,"@cycle/core":1,"cycle-snabbdom":6,"cyclic-history":17,"history":39}],100:[function(require,module,exports){
-"use strict";
-
-function isPattern(candidate) {
-  return typeof candidate === "string" && (candidate.charAt(0) === "/" || candidate === "*");
-}
-
-function isRouteConfigurationObject(routes) {
-  if (typeof routes !== "object") {
-    return false;
-  }
-  for (var path in routes) {
-    if (routes.hasOwnProperty(path)) {
-      return isPattern(path);
-    }
-  }
-}
-
-function unprefixed(fullStr, prefix) {
-  return fullStr.split(prefix)[1];
-}
-
-function matchesWithParams(sourcePath, pattern) {
-  var sourceParts = sourcePath.split("/").filter(function (s) {
-    return s.length > 0;
-  });
-  var patternParts = pattern.split("/").filter(function (s) {
-    return s.length > 0;
-  });
-  var params = patternParts.map(function (patternPart, index) {
-    if (patternPart.match(/:\w+/) !== null) {
-      return sourceParts[index];
-    } else {
-      return null;
-    }
-  }).filter(function (x) {
-    return x !== null;
-  });
-  var matched = patternParts.every(function (part, i) {
-    return part.match(/:\w+/) !== null || part === sourceParts[i];
-  });
-  return matched ? params : [];
-}
-
-function validateSwitchPathPreconditions(sourcePath, routes) {
-  if (typeof sourcePath !== "string") {
-    throw new Error("Invalid source path. We expected to see a string given " + "as the sourcePath (first argument) to switchPath.");
-  }
-  if (!isRouteConfigurationObject(routes)) {
-    throw new Error("Invalid routes object. We expected to see a routes " + "configuration object where keys are strings that look like '/foo'. " + "These keys must start with a slash '/'.");
-  }
-}
-
-function validatePatternPreconditions(pattern) {
-  if (!isPattern(pattern)) {
-    throw new Error("Paths in route configuration must be strings that start " + "with a slash '/'.");
-  }
-}
-
-function isNormalPattern(routes, pattern) {
-  if (pattern === "*" || !routes.hasOwnProperty(pattern)) {
-    return false;
-  }
-  return true;
-}
-
-function handleTrailingSlash(paramsFn) {
-  if (isRouteConfigurationObject(paramsFn)) {
-    return paramsFn["/"];
-  }
-  return paramsFn;
-}
-
-function getParamsFnValue(paramFn, params) {
-  var _paramFn = handleTrailingSlash(paramFn);
-  if (typeof _paramFn !== "function") {
-    return _paramFn;
-  }
-  return _paramFn.apply(null, params);
-}
-
-function splitPath(path) {
-  var pathParts = path.split("/");
-  if (pathParts[pathParts.length - 1] === "") {
-    pathParts.pop();
-  }
-  return pathParts;
-}
-
-function validatePath(sourcePath, matchedPath) {
-  if (matchedPath === null) {
-    return "";
-  }
-  var sourceParts = splitPath(sourcePath);
-  var matchedParts = splitPath(matchedPath);
-  var validPath = sourceParts.map(function (part, index) {
-    if (part !== matchedParts[index]) {
-      return null;
-    }
-    return part;
-  }).filter(function (x) {
-    return x !== null;
-  }).join("/");
-  return validPath;
-}
-
-function validate(_ref) {
-  var sourcePath = _ref.sourcePath;
-  var matchedPath = _ref.matchedPath;
-  var value = _ref.value;
-  var routes = _ref.routes;
-
-  var validPath = validatePath(sourcePath, matchedPath);
-  if (!validPath) {
-    validPath = !routes["*"] ? null : sourcePath;
-    var validValue = !validPath ? null : routes["*"];
-    return {
-      validPath: validPath,
-      validValue: validValue
-    };
-  }
-  return { validPath: validPath, validValue: value };
-}
-
-function betterMatch(candidate, reference) {
-  if (candidate === null) {
-    return false;
-  }
-  if (reference === null) {
-    return true;
-  }
-  return candidate.length >= reference.length;
-}
-
-function switchPath(sourcePath, routes) {
-  validateSwitchPathPreconditions(sourcePath, routes);
-  var matchedPath = null;
-  var value = null;
-  for (var pattern in routes) {
-    if (!isNormalPattern(routes, pattern)) {
-      continue;
-    }
-    validatePatternPreconditions(pattern);
-    if (sourcePath.search(pattern) === 0 && betterMatch(pattern, matchedPath)) {
-      matchedPath = pattern;
-      value = routes[pattern];
-    }
-    var params = matchesWithParams(sourcePath, pattern);
-    if (params.length > 0 && betterMatch(sourcePath, matchedPath)) {
-      matchedPath = sourcePath;
-      value = getParamsFnValue(routes[pattern], params);
-    }
-    if (isRouteConfigurationObject(routes[pattern]) && params.length === 0) {
-      var child = switchPath(unprefixed(sourcePath, pattern), routes[pattern]);
-      var nestedPath = pattern + child.path;
-      if (child.path !== null && betterMatch(nestedPath, matchedPath)) {
-        matchedPath = nestedPath;
-        value = child.value;
-      }
-    }
-    if (pattern === sourcePath) {
-      return { path: pattern, value: handleTrailingSlash(routes[pattern]) };
-    }
-  }
-
-  var _validate = validate({
-    sourcePath: sourcePath,
-    matchedPath: matchedPath,
-    value: value,
-    routes: routes
-  });
-
-  var validPath = _validate.validPath;
-  var validValue = _validate.validValue;
-
-  return { path: validPath, value: validValue };
-}
-
-module.exports = switchPath;
-},{}],101:[function(require,module,exports){
+},{"../../lib":100,"./app":86,"@cycle/core":1,"cycle-snabbdom":6,"history":33}],97:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19797,9 +19669,38 @@ var _definitionResolver = require('./definitionResolver');
 
 var _util = require('./util');
 
+/**
+ * Creates the public API returned by the base router driver
+ * as well as the API which is returned by `.path()`
+ * @private
+ * @method createAPI
+ * @param  {Observable<history.location>}  history$   Observable of the current
+ * location as defined by rackt/history
+ * @param  {Array<String>}  namespace  An array which contains all of the
+ * `.path()`s that have be created to this point
+ * @param  {function}  createHref This is the method to create a HREF as defined
+ * by the history object that is passed to the history driver
+ * @return {routerAPI}
+ */
 function createAPI(history$, namespace, createHref) {
-  var replayedHistory$ = history$.replay(1);
+  var replayedHistory$ = history$.replay(null, 1);
   var disposable = replayedHistory$.connect();
+
+  /**
+   * The Public API returned by the router driver, createRouter(), and .path()
+   * @typedef {routerAPI}
+   * @name routerAPI
+   * @type {Object}
+   * @prop {path} path - used for filtering routes to a given path
+   * @prop {define} define - used for defining a set of routes to values via
+   * switch-path
+   * @prop {Observable<location>} observable - a way to get access to the
+   * current history$ from the historyDriver
+   * @prop {createHref} createHref - a method for create HREFs that are properly
+   * prefixed for the current namespace
+   * @prop {function} dispose - a method to dispose of the history$ returned
+   * by [.observable](#API)
+   */
   return {
     path: (0, _pathFilter.makePathFilter)(replayedHistory$, namespace, createHref),
     define: (0, _definitionResolver.makeDefinitionResolver)(replayedHistory$, namespace, createHref),
@@ -19813,7 +19714,7 @@ function createAPI(history$, namespace, createHref) {
 
 exports.createAPI = createAPI;
 
-},{"./definitionResolver":103,"./pathFilter":106,"./util":107}],102:[function(require,module,exports){
+},{"./definitionResolver":99,"./pathFilter":102,"./util":103}],98:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19823,13 +19724,22 @@ exports.createRouter = undefined;
 
 var _api = require('./api');
 
+/**
+ * Creates a router instance from a history$. The history$ must have a
+ * `.createHref` method attached to it
+ * @method createRouter
+ * @public
+ * @param  {Observable<location>}     history$ An observable of the
+ * current location object as defined by rackt/history
+ * @return {routerAPI}
+ */
 function createRouter(history$) {
   return (0, _api.createAPI)(history$, [], history$.createHref);
 }
 
 exports.createRouter = createRouter;
 
-},{"./api":101}],103:[function(require,module,exports){
+},{"./api":97}],99:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19843,11 +19753,23 @@ var _switchPath2 = _interopRequireDefault(_switchPath);
 
 var _util = require('./util');
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { default: obj };
+}
 
+/**
+ * Workaround for issues with switch-path finding the * parameter
+ * @private
+ * @method getPathValue
+ * @param  {string}     pathname    the route to match against
+ * @param  {Object}     definitions route definitions object as defined by
+ * switch-path
+ * @return {Object}                 an object containing the path matched
+ * and the value associated with that route.
+ */
 function getPathValue(pathname, definitions) {
-  var path = undefined;
-  var value = undefined;
+  var path = void 0;
+  var value = void 0;
   try {
     var match = (0, _switchPath2.default)(pathname, definitions);
     value = match.value;
@@ -19856,7 +19778,7 @@ function getPathValue(pathname, definitions) {
     // try handling default route
     if (definitions['*']) {
       path = pathname;
-      value = definitions['*'];
+      value = definitions['*'] || null;
     } else {
       throw e;
     }
@@ -19864,10 +19786,36 @@ function getPathValue(pathname, definitions) {
   return { path: path, value: value };
 }
 
-function makeDefinitionResolver(history$, namespace, createHref) {
-  return function definitionResolver(definitions) {
-    var matches$ = history$.map(function (_ref) {
-      var pathname = _ref.pathname;
+/**
+ * Creates the method used publicly as .define()
+ * @private
+ * @method makeDefinitionResolver
+ * @param  {Observable<location>}               history$   Observable
+ * of the current location as defined by rackt/history
+ * @param  {Array<String>}               namespace  An array which contains
+ * all of the `.path()`s that have be created to this point
+ * @param  {function}               createHref function used to create HREFs
+ * as defined by the current history instance
+ * @return {function}                          the public API function used
+ * for `.define()`
+ */
+function makeDefinitionResolver(history$, namespace, _createHref) {
+  /**
+   * Function used to match the current route to a set of routes using
+   * switch-path
+   * @public
+   * @typedef {define}
+   * @name define
+   * @method define
+   * @param  {Object}   definitions Route definitions as expected by switch-path
+   * @return {Observable<Object>} an observable containing the `path` and
+   * `value` returned by switch-path. `location` as returned by @cycle/history
+   * and a createHref method for creating nested HREFs
+   */
+  return function define(definitions) {
+    var createHref = (0, _util.makeCreateHref)(namespace, _createHref);
+    var match$ = history$.map(function (location) {
+      var pathname = location.pathname;
 
       var filteredPath = '/' + (0, _util.filterPath)((0, _util.splitPath)(pathname), namespace);
 
@@ -19876,37 +19824,22 @@ function makeDefinitionResolver(history$, namespace, createHref) {
       var path = _getPathValue.path;
       var value = _getPathValue.value;
 
-      return { path: path, value: value, pathname: pathname };
-    });
+      return { path: path, value: value, location: location, createHref: createHref };
+    }).replay(null, 1);
 
-    var path$ = matches$.pluck('path').replay(1);
-    var pathDisposable = path$.connect();
+    var disposable = match$.connect();
 
-    var value$ = matches$.pluck('value').replay(1);
-    var valueDisposable = value$.connect();
-
-    var fullPath$ = matches$.pluck('pathname').replay(1);
-    var fullPathDisposable = fullPath$.connect();
-
-    var dispose = function dispose() {
-      pathDisposable.dispose();
-      fullPathDisposable.dispose();
-      valueDisposable.dispose();
+    match$.createHref = createHref;
+    match$.dispose = function () {
+      return disposable.dispose();
     };
-
-    return {
-      path$: path$,
-      value$: value$,
-      fullPath$: fullPath$,
-      createHref: (0, _util.makeCreateHref)(namespace, createHref),
-      dispose: dispose
-    };
+    return match$;
   };
 }
 
 exports.makeDefinitionResolver = makeDefinitionResolver;
 
-},{"./util":107,"switch-path":100}],104:[function(require,module,exports){
+},{"./util":103,"switch-path":110}],100:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -19931,6 +19864,307 @@ Object.defineProperty(exports, 'createRouter', {
   }
 });
 
+var _history = require('@cycle/history');
+
+Object.defineProperty(exports, 'supportsHistory', {
+  enumerable: true,
+  get: function get() {
+    return _history.supportsHistory;
+  }
+});
+Object.defineProperty(exports, 'createLocation', {
+  enumerable: true,
+  get: function get() {
+    return _history.createLocation;
+  }
+});
+Object.defineProperty(exports, 'createServerHistory', {
+  enumerable: true,
+  get: function get() {
+    return _history.createServerHistory;
+  }
+});
+
+},{"./createRouter":98,"./makeRouterDriver":101,"@cycle/history":105}],101:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makeRouterDriver = undefined;
+
+var _api = require('./api');
+
+var _history = require('@cycle/history');
+
+/**
+ * Instantiates an new router driver function using the same arguments required
+ * by @cycle/history.
+ * @public
+ * @method makeRouterDriver
+ * @return {routerDriver} The router driver function
+ */
+function makeRouterDriver() {
+  var historyDriver = _history.makeHistoryDriver.apply(undefined, arguments);
+  /**
+   * The actual router driver.
+   * @public
+   * @typedef {routerDriver}
+   * @name routerDriver
+   * @method routerDriver
+   * @param  {Observable<string|Object>} sink$ - This is the same input that the
+   * history driver would expect.
+   * @return {routerAPI}
+   */
+  return function routerDriver(sink$) {
+    var history$ = historyDriver(sink$);
+    return (0, _api.createAPI)(history$.share(), [], history$.createHref);
+  };
+}
+
+exports.makeRouterDriver = makeRouterDriver;
+
+},{"./api":97,"@cycle/history":105}],102:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makePathFilter = undefined;
+
+var _api = require('./api');
+
+var _util = require('./util');
+
+/**
+ * filters a path based on the current namespace
+ * @private
+ * @method isStrictlyInScope
+ * @param  {Array<string>}          namespace an array of nested path
+ * @param  {string}          path      the current pathaname
+ * @return {Boolean}                   whether or not the current route is
+ *  within the current namespace
+ */
+function isStrictlyInScope(namespace, path) {
+  var pathParts = (0, _util.splitPath)(path);
+  return namespace.every(function (v, i) {
+    return pathParts[i] === v;
+  });
+}
+
+/**
+ * Creates the function used publicly as .path()
+ * @private
+ * @method makePathFilter
+ * @param  {Observable<history.location>}               history$   Observable
+ * of the current location as defined by rackt/history
+ * @param  {Array<String>}               namespace  An array which contains
+ * all of the `.path()`s that have be created to this point
+ * @param  {function}               createHref function used to create HREFs
+ * as defined by the current history instance
+ * @return {function}                          the public API function used
+ * for `.path()`
+ */
+function makePathFilter(history$, namespace, createHref) {
+  /**
+   * Filters the current location to easily create nested routes
+   * @public
+   * @typedef {path}
+   * @name path
+   * @method path
+   * @param  {string} pathname the route at which to filter
+   * @return {routerAPI}
+   */
+  return function path(pathname) {
+    var scopedNamespace = namespace.concat((0, _util.splitPath)(pathname));
+    var scopedHistory$ = history$.filter(function (_ref) {
+      var _path = _ref.pathname;
+      return isStrictlyInScope(scopedNamespace, _path);
+    });
+    return (0, _api.createAPI)(scopedHistory$, scopedNamespace, createHref);
+  };
+}
+
+exports.makePathFilter = makePathFilter;
+
+},{"./api":97,"./util":103}],103:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/**
+ * Splits a path into parts
+ * @private
+ * @method splitPath
+ * @param  {string}  path the route in which to split
+ * @return {Array<string>}       Array of the separate parts of the route
+ */
+function splitPath(path) {
+  return path.split('/').filter(function (p) {
+    return p.length > 0;
+  });
+}
+
+/**
+ * Filters the parts of a path against a namespace
+ * @private
+ * @method filterPath
+ * @param  {Array<String}   pathParts parts of the current route
+ * @param  {Array<String>}   namespace each part of the paths to filter upon
+ * as defined by `path()`
+ * @return {Array<String>}             Array of the paths that pathParts
+ * contains but is not contained by namespace
+ */
+function filterPath(pathParts, namespace) {
+  return pathParts.filter(function (part) {
+    return namespace.indexOf(part) < 0;
+  }).join('/');
+}
+
+var startsWith = function startsWith(param, value) {
+  return param[0] === value;
+};
+
+var startsWith2 = function startsWith2(param, value1, value2) {
+  return param[0] === value1 && param[1] === value2;
+};
+
+/**
+ * creates the public method createHref()
+ * @private
+ * @method makeCreateHref
+ * @param  {Array<string>}       namespace  each part of the paths to filter
+ * upon as defined by `path()`
+ * @param  {function}       createHref method to create an href as expected
+ * by the current history instance
+ * @return {function}                  the public createHref() function
+ */
+function makeCreateHref(namespace, _createHref) {
+  /**
+   * Function used to create HREFs that are properly namespaced
+   * @typedef {createHref}
+   * @name createHref
+   * @method createHref
+   * @param  {string}   path the HREF that will be appended to the current
+   * namespace
+   * @return {string}        a fully qualified HREF composed from the current
+   * namespace and the path provided
+   */
+  return function createHref(path) {
+    var fullPath = '' + namespace.join('/') + path;
+    if (startsWith(fullPath, '/') || startsWith2(fullPath, '#', '/')) {
+      return _createHref(fullPath);
+    }
+    return _createHref('/' + fullPath);
+  };
+}
+
+exports.splitPath = splitPath;
+exports.filterPath = filterPath;
+exports.makeCreateHref = makeCreateHref;
+
+},{}],104:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var clickEvent = "undefined" !== typeof document && document.ontouchstart ? "touchstart" : "click";
+
+function which(ev) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  var e = ev || window.event;
+  return e.which === null ? e.button : e.which;
+}
+
+function sameOrigin(href) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return href && href.indexOf(window.location.origin) === 0;
+}
+
+function makeClickListener(push) {
+  return function clickListener(event) {
+    // eslint-disable-line
+    if (which(event) !== 1) {
+      return;
+    }
+
+    if (event.metaKey || event.ctrlKey || event.shiftKey) {
+      return;
+    }
+
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    var element = event.target;
+    while (element && element.nodeName !== "A") {
+      element = element.parentNode;
+    }
+    if (!element || element.nodeName !== "A") {
+      return;
+    }
+
+    if (element.hasAttribute("download") || element.getAttribute("rel") === "external") {
+      return;
+    }
+
+    if (element.target) {
+      return;
+    }
+
+    var link = element.getAttribute("href");
+
+    if (link && link.indexOf("mailto:") > -1 || link === "#") {
+      return;
+    }
+
+    if (!sameOrigin(element.href)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    var _element = element;
+    var pathname = _element.pathname;
+    var search = _element.search;
+    var _element$hash = _element.hash;
+    var hash = _element$hash === undefined ? "" : _element$hash;
+
+    push(pathname + search + hash);
+  };
+}
+
+function captureClicks(push) {
+  var listener = makeClickListener(push);
+  if (typeof window !== "undefined") {
+    document.addEventListener(clickEvent, listener, false);
+  }
+}
+
+exports.captureClicks = captureClicks;
+},{}],105:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _makeHistoryDriver = require('./makeHistoryDriver');
+
+Object.defineProperty(exports, 'makeHistoryDriver', {
+  enumerable: true,
+  get: function get() {
+    return _makeHistoryDriver.makeHistoryDriver;
+  }
+});
+
 var _util = require('./util');
 
 Object.defineProperty(exports, 'supportsHistory', {
@@ -19946,130 +20180,489 @@ Object.defineProperty(exports, 'createLocation', {
   }
 });
 
-},{"./createRouter":102,"./makeRouterDriver":105,"./util":107}],105:[function(require,module,exports){
+var _serverHistory = require('./serverHistory');
+
+Object.defineProperty(exports, 'createServerHistory', {
+  enumerable: true,
+  get: function get() {
+    return _serverHistory.createServerHistory;
+  }
+});
+},{"./makeHistoryDriver":106,"./serverHistory":107,"./util":108}],106:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.makeRouterDriver = undefined;
+exports.makeHistoryDriver = undefined;
 
-var _api = require('./api');
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-function makeRouterDriver(historyDriver) {
-  if (!historyDriver || typeof historyDriver !== 'function') {
-    throw new Error('First argument to makeRouterDriver must be a valid ' + 'history driver');
-  }
-  return function routerDriver(sink$) {
-    var history$ = historyDriver(sink$);
-    return (0, _api.createAPI)(history$, [], history$.createHref);
+var _rx = require('rx');
+
+var _captureClicks = require('./captureClicks');
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function makeUpdateHistory(history) {
+  return function updateHistory(location) {
+    if ('string' === typeof location) {
+      history.push(history.createLocation(location));
+    } else if ('object' === (typeof location === 'undefined' ? 'undefined' : _typeof(location))) {
+      // suport things like history.replace()
+      var _location$type = location.type;
+      var type = _location$type === undefined ? 'push' : _location$type;
+
+      var loc = _objectWithoutProperties(location, ['type']);
+
+      if (type === 'go') {
+        history[type](loc.value);
+      } else {
+        history[type](loc);
+      }
+    } else {
+      throw new Error('History Driver input must be a string or\n        object but received ' + (typeof url === 'undefined' ? 'undefined' : _typeof(url)));
+    }
   };
 }
 
-exports.makeRouterDriver = makeRouterDriver;
+/**
+ * Instantiates an new history driver function using a valid history object.
+ * @public
+ * @method makeHistoryDriver
+ * @param  {object}          history - a valid history instance as defined by
+ * ractk/history. Should have `createLocation()`, `createHref()`, `listen()`,
+ * and `push()` methods.
+ * @param {object} options - options object - currently accepts a `boolean` for
+ * the parameter `capture`. `capture` will automatically capture link clicks.
+ * @return {historyDriver}                  The history driver function
+ * @example
+ * import {run} from '@cycle/core'
+ * import {makeHistoryDriver} from '@motorcycle/history'
+ * import {useQueries, createHashHistory} form 'history'
+ *
+ * function main(sources) {...}
+ *
+ * const history = createHashHistory()
+ * run(main, {
+ *   history: makeHistoryDriver(history),
+ * })
+ */
+function makeHistoryDriver(history) {
+  var _ref = arguments.length <= 1 || arguments[1] === undefined ? { capture: false } : arguments[1];
 
-},{"./api":101}],106:[function(require,module,exports){
+  var _ref$capture = _ref.capture;
+  var capture = _ref$capture === undefined ? false : _ref$capture;
+
+  if (!history || typeof history !== 'object' || typeof history.createLocation !== 'function' || typeof history.createHref !== 'function' || typeof history.listen !== 'function' || typeof history.push !== 'function') {
+    throw new TypeError('makeHistoryDriver requires an valid history object ' + 'containing createLocation(), createHref(), push(), and listen() methods');
+  }
+  /*eslint-disable*/
+  /**
+   * The history driver used by run()
+   * @typedef {historyDriver}
+   * @name historyDriver
+   * @public
+   * @method historyDriver
+   * @param  {Observable<location>}      sink$ The output returned from your main()
+   * function. This can be a URL string, any valid Location object, or an object
+   * with a type key to execute a particular history function like goBack(),
+   * goForward(). When using type: 'go' a `value` key is expected to have an
+   * integer with how many locations to go back or forward.
+   * @example
+   * return { history: Observable.just({type: 'go', value: -2}) }
+   * return { history: Observable.just('/some/path')} }
+   * return { history: Observable.just({pathname: '/some/path', state: {some: 'state'}}) }
+   * @return {Observable<location>}            An Observable containing the current
+   * location you have navigated to.
+   */
+  /*eslint-enable*/
+  return function historyDriver(sink$) {
+    var history$ = new _rx.ReplaySubject(1);
+    history.listen(function (location) {
+      return history$.onNext(location);
+    });
+
+    sink$.subscribe(makeUpdateHistory(history));
+
+    if (capture) {
+      (0, _captureClicks.captureClicks)(function (pathname) {
+        var location = history.createLocation({ pathname: pathname, action: 'PUSH' });
+        history.push(location);
+      });
+    }
+
+    history$.createLocation = history.createLocation;
+    history$.createHref = history.createHref;
+    return history$;
+  };
+}
+
+exports.makeHistoryDriver = makeHistoryDriver;
+},{"./captureClicks":104,"rx":109}],107:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.makePathFilter = undefined;
-
-var _api = require('./api');
+exports.createServerHistory = undefined;
 
 var _util = require('./util');
 
-function isStrictlyInScope(namespace, path) {
-  var pathParts = (0, _util.splitPath)(path);
-  return namespace.every(function (v, i) {
-    return pathParts[i] === v;
+/*eslint-disable*/
+/**
+ * @typedef {ServerHistory}
+ * @name ServerHistory
+ * @public
+ * @prop {function} listen - a way to listen for location changes (used internally)
+ * @prop {function} push - a way to push new locations to listeners.
+ *       Can be used to push url changes on the server-side.
+ * @prop {function} replace - a way to replace the current location -
+ * effectively the same as push() in this instance. (used internally)
+ * @prop {function} createHref - creates an HREF (used internally)
+ * @prop {createLocation} createLocation
+ */
+/*eslint-enable*/
+function ServerHistory() {
+  this.listeners = [];
+}
+
+ServerHistory.prototype.listen = function listen(listener) {
+  this.listeners.push(listener);
+  return function () {};
+};
+
+ServerHistory.prototype.push = function push(location) {
+  var listeners = this.listeners;
+  if (!listeners || listeners.length === 0) {
+    throw new Error('There is no active listener');
+  }
+  listeners.forEach(function (l) {
+    return l((0, _util.createLocation)(location));
   });
+};
+
+ServerHistory.prototype.replace = function replace(location) {
+  var listeners = this.listeners;
+  if (!listeners || listeners.length === 0) {
+    throw new Error('There is no active listener');
+  }
+  listeners.forEach(function (l) {
+    return l((0, _util.createLocation)(location));
+  });
+};
+
+ServerHistory.prototype.createHref = function createHref(path) {
+  return path;
+};
+
+ServerHistory.prototype.createLocation = _util.createLocation;
+
+/**
+ * @method createServerHistory
+ * @public
+ * @return {ServerHistory}
+ * @example
+ * // server-side
+ * import express from 'express'
+ * import {run} from '@cycle/core'
+ * import {
+ *   makeHistoryDriver,
+ *   createServerHistory,
+ *   createLocation
+ * } from '@motorcycle/history'
+ * import {makeHTMLDriver} from '@motorcycle/html'
+ *
+ * const app = express()
+ *
+ * app.use((res, req) => {
+ *   ...
+ *   const history = createServerHistory()
+ *   const {sources} = run(main, {
+ *     history: makeHistoryDriver(history),
+ *     html: makeHTMLDriver(),
+ *   })
+ *
+ *   history.push(createLocation(req.url))
+ *
+ *   sources.html.select(':root').observe(html => res.end(html))
+ *   ...
+ * })
+ *
+ * app.listen(3000)
+ */
+function createServerHistory() {
+  return new ServerHistory();
 }
 
-function makePathFilter(history$, namespace, createHref) {
-  return function pathFilter(path) {
-    var scopedNamespace = namespace.concat((0, _util.splitPath)(path));
-    var scopedHistory$ = history$.filter(function (_ref) {
-      var pathname = _ref.pathname;
-      return isStrictlyInScope(scopedNamespace, pathname);
-    });
-    return (0, _api.createAPI)(scopedHistory$, scopedNamespace, createHref);
-  };
-}
-
-exports.makePathFilter = makePathFilter;
-
-},{"./api":101,"./util":107}],107:[function(require,module,exports){
-'use strict';
+exports.createServerHistory = createServerHistory;
+},{"./util":108}],108:[function(require,module,exports){
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-function supportsHistory() {
-  var ua = navigator.userAgent;
 
-  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
-    {
-      return false;
-    }
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+/**
+ * Function that returns whether or not the current environment
+ * supports the HistoryAPI
+ * @public
+ * @type {function}
+ * @name supportsHistory()
+ * @method supportsHistory()
+ * @return {Boolean} Returns true if the current environment supports
+ * the History API; false if it does not.
+ * @example
+ * import {run} from '@cycle/core'
+ * import {makeHistoryDriver, supportsHistory} from 'cyclic-history'
+ * import {createHashHistory, createHistory} from 'history'
+ *
+ * function main(sources) {...}
+ *
+ * const history = supportsHistory() ?
+ *   createHistory() : createHashHistory()
+ *
+ * run(main, {
+ *   history: makeHistoryDriver(history)
+ * })
+ */
+function supportsHistory() {
+  if (typeof navigator === "undefined") {
+    return false;
   }
 
-  if (typeof window !== 'undefined') {
-    return window.history && 'pushState' in window.history;
+  var ua = navigator.userAgent;
+
+  if ((ua.indexOf("Android 2.") !== -1 || ua.indexOf("Android 4.0") !== -1) && ua.indexOf("Mobile Safari") !== -1 && ua.indexOf("Chrome") === -1 && ua.indexOf("Windows Phone") === -1) {
+    return false;
+  }
+
+  if (typeof window !== "undefined") {
+    return window.history && "pushState" in window.history;
   } else {
     return false;
   }
 }
 
-function splitPath(path) {
-  return path.split('/').filter(function (p) {
-    return p.length > 0;
-  });
-}
-
-function filterPath(pathParts, namespace) {
-  return pathParts.filter(function (part) {
-    return namespace.indexOf(part) < 0;
-  }).join('/');
-}
-
-var startsWith = function startsWith(param, value) {
-  return param[0] === value;
-};
-
-function makeCreateHref(namespace, createHref) {
-  return function _createHref(path) {
-    var fullPath = '' + namespace.join('/') + path;
-    if (startsWith(fullPath, '/') || startsWith('#/')) {
-      return createHref(fullPath);
-    }
-    return createHref('/' + fullPath);
-  };
-}
-
+/**
+ * Default parameters for createLocation; Same structure used by rackt/history
+ * @public
+ * @typedef {location}
+ * @name location
+ * @type {Object}
+ * @property {string} pathname  defaults to '/'
+ * @property {string} action  defaults to 'POP'
+ * @property {string} hash  defaults to ''
+ * @property {string} search defaults to  ''
+ * @property {Object|Null} state defautls to null
+ * @property {string|Null} key defaults to null
+ */
 var locationDefaults = {
-  pathname: '/',
-  action: 'POP',
-  hash: '',
-  search: '',
+  pathname: "/",
+  action: "POP",
+  hash: "",
+  search: "",
   state: null,
-  key: null
+  key: null,
+  query: null
 };
-
+/*eslint-disable*/
+/**
+ * Create a location object - particularly useful for server-side rendering
+ * @method createLocation
+ * @param  {location} [location=locationDefaults]  A location as
+ * defined by [rackt/history](https://github.com/rackt/history/blob/master/docs/Glossary.md#location)
+ * with sane defaults
+ * @return {location}                a complete location object as defined by
+ * [rackt/history](https://github.com/rackt/history/blob/master/docs/Glossary.md#location)
+ */
+/*eslint-enable*/
 function createLocation() {
   var location = arguments.length <= 0 || arguments[0] === undefined ? locationDefaults : arguments[0];
 
-  if (typeof location === 'string') {
-    return Object.assign(locationDefaults, { pathname: location });
+  if (typeof location === "string") {
+    return _extends({}, locationDefaults, { pathname: location });
   }
-  return Object.assign(locationDefaults, location);
+  return _extends({}, locationDefaults, location);
 }
 
 exports.supportsHistory = supportsHistory;
-exports.splitPath = splitPath;
-exports.filterPath = filterPath;
-exports.makeCreateHref = makeCreateHref;
 exports.createLocation = createLocation;
+},{}],109:[function(require,module,exports){
+arguments[4][62][0].apply(exports,arguments)
+},{"_process":60,"dup":62}],110:[function(require,module,exports){
+'use strict';
 
-},{}]},{},[99]);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = require('./util');
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function switchPathInputGuard(path, routes) {
+  if (!(0, _util.isPattern)(path)) {
+    throw new Error('First parameter to switchPath must be a route path.');
+  }
+  if (!(0, _util.isRouteDefinition)(routes)) {
+    throw new Error('Second parameter to switchPath must be an object ' + 'containing route patterns.');
+  }
+}
+
+function betterMatch(candidate, reference) {
+  if (!(0, _util.isNotNull)(candidate)) {
+    return false;
+  }
+  if (!(0, _util.isNotNull)(reference)) {
+    return true;
+  }
+  return candidate.length >= reference.length;
+}
+
+function matchesWithParams(sourcePath, pattern) {
+  var sourceParts = (0, _util.splitPath)(sourcePath);
+  var patternParts = (0, _util.splitPath)(pattern);
+
+  var params = patternParts.map(function (part, i) {
+    return (0, _util.isParam)(part) ? sourceParts[i] : null;
+  }).filter(_util.isNotNull);
+
+  var matched = patternParts.every(function (part, i) {
+    return (0, _util.isParam)(part) || part === sourceParts[i];
+  });
+
+  return matched ? params : [];
+}
+
+function getParamFnValue(paramFn, params) {
+  var _paramFn = (0, _util.isRouteDefinition)(paramFn) ? paramFn['/'] : paramFn;
+  return typeof _paramFn === 'function' ? _paramFn.apply(undefined, _toConsumableArray(params)) : _paramFn;
+}
+
+function validatePath(sourcePath, matchedPath) {
+  var sourceParts = (0, _util.splitPath)(sourcePath);
+  var matchedParts = (0, _util.splitPath)(matchedPath);
+
+  for (var i = 0; i < matchedParts.length; ++i) {
+    if (matchedParts[i] !== sourceParts[i]) {
+      return null;
+    }
+  }
+
+  return '/' + (0, _util.extractPartial)(sourcePath, matchedPath);
+}
+
+function validate(_ref) {
+  var sourcePath = _ref.sourcePath;
+  var matchedPath = _ref.matchedPath;
+  var matchedValue = _ref.matchedValue;
+  var routes = _ref.routes;
+
+  var path = matchedPath ? validatePath(sourcePath, matchedPath) : null;
+  var value = matchedValue;
+  if (!path) {
+    path = routes['*'] ? sourcePath : null;
+    value = path ? routes['*'] : null;
+  }
+  return { path: path, value: value };
+}
+
+function switchPath(sourcePath, routes) {
+  switchPathInputGuard(sourcePath, routes);
+  var matchedPath = null;
+  var matchedValue = null;
+
+  (0, _util.traverseRoutes)(routes, function matchPattern(pattern) {
+    if (sourcePath.search(pattern) === 0 && betterMatch(pattern, matchedPath)) {
+      matchedPath = pattern;
+      matchedValue = routes[pattern];
+    }
+
+    var params = matchesWithParams(sourcePath, pattern);
+
+    if (params.length > 0 && betterMatch(sourcePath, matchedPath)) {
+      matchedPath = (0, _util.extractPartial)(sourcePath, pattern);
+      matchedValue = getParamFnValue(routes[pattern], params);
+    }
+
+    if ((0, _util.isRouteDefinition)(routes[pattern]) && params.length === 0) {
+      var child = switchPath((0, _util.unprefixed)(sourcePath, pattern) || '/', routes[pattern]);
+      var nestedPath = pattern + child.path;
+      if (!child.path !== null && betterMatch(nestedPath, matchedPath)) {
+        matchedPath = nestedPath;
+        matchedValue = child.value;
+      }
+    }
+  });
+
+  return validate({ sourcePath: sourcePath, matchedPath: matchedPath, matchedValue: matchedValue, routes: routes });
+}
+
+exports.default = switchPath;
+},{"./util":111}],111:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isPattern = isPattern;
+exports.isRouteDefinition = isRouteDefinition;
+exports.traverseRoutes = traverseRoutes;
+exports.isNotNull = isNotNull;
+exports.splitPath = splitPath;
+exports.isParam = isParam;
+exports.extractPartial = extractPartial;
+exports.unprefixed = unprefixed;
+function isPattern(candidate) {
+  return typeof candidate === "string" && (candidate.charAt(0) === "/" || candidate === "*");
+}
+
+function isRouteDefinition(candidate) {
+  return !candidate || typeof candidate !== "object" ? false : isPattern(Object.keys(candidate)[0]);
+}
+
+function traverseRoutes(routes, callback) {
+  var keys = Object.keys(routes);
+  for (var i = 0; i < keys.length; ++i) {
+    var pattern = keys[i];
+    if (pattern === "*") {
+      continue;
+    }
+    callback(pattern);
+  }
+}
+
+function isNotNull(candidate) {
+  return candidate !== null;
+}
+
+function splitPath(path) {
+  return path.split("/").filter(function (s) {
+    return !!s;
+  });
+}
+
+function isParam(candidate) {
+  return candidate.match(/:\w+/) !== null;
+}
+
+function extractPartial(sourcePath, pattern) {
+  var patternParts = splitPath(pattern);
+  var sourceParts = splitPath(sourcePath);
+
+  var matchedParts = [];
+
+  for (var i = 0; i < patternParts.length; ++i) {
+    matchedParts.push(sourceParts[i]);
+  }
+
+  return matchedParts.filter(isNotNull).join("/");
+}
+
+function unprefixed(fullString, prefix) {
+  return fullString.split(prefix)[1];
+}
+},{}]},{},[96]);

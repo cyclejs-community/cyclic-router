@@ -16,7 +16,7 @@ import {makeCreateHref} from './util'
  * @return {routerAPI}
  */
 function createAPI(history$, namespace, createHref) {
-  const replayedHistory$ = history$.replay(1)
+  const replayedHistory$ = history$.replay(null, 1)
   const disposable = replayedHistory$.connect()
 
   /**
@@ -34,14 +34,13 @@ function createAPI(history$, namespace, createHref) {
    * @prop {function} dispose - a method to dispose of the history$ returned
    * by [.observable](#API)
    */
-  const API = {
+  return {
     path: makePathFilter(replayedHistory$, namespace, createHref),
     define: makeDefinitionResolver(replayedHistory$, namespace, createHref),
     observable: replayedHistory$,
     createHref: makeCreateHref(namespace, createHref),
     dispose: () => disposable.dispose(),
   }
-  return API
 }
 
 export {createAPI}
