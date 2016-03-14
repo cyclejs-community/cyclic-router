@@ -34,9 +34,9 @@ const linkStyle = {
   textDecoration: 'none',
 }
 
-function view(createHref, path$, children) {
-  return path$.map(() => {
-    return div({},[
+function view(createHref) {
+  return (children) =>
+    div({},[
       ul({style: ulStyle}, [
         li({style: liStyle}, [
           a({style: linkStyle,
@@ -58,16 +58,15 @@ function view(createHref, path$, children) {
       ]),
       children,
     ])
-  })
 }
 
 function Inbox(sources) {
   const {router} = sources
-  const {path$, value$} = router.define(routes)
+  const match$ = router.define(routes)
 
-  const childrenDOM$ = value$.map(value => value(sources).DOM)
+  const childrenDOM$ = match$.map(({value}) => value(sources).DOM)
 
-  return {DOM: view(router.createHref, path$, childrenDOM$)}
+  return {DOM: childrenDOM$.map(view(router.createHref))}
 }
 
 export default Inbox

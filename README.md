@@ -32,13 +32,11 @@ The example found in the repo can be taken for a test-drive [here](http://tylors
 Here is a rundown of the `example` provided with this repo in the folder `/example`. This should allow a better understanding of how to use cyclic-router, for simplicity the styling has been removed here.
 
 Starting in the file which has Cycle `run`, router driver needs to be created here along with the other drivers that you might be using.
-Looking at the imports below, [cyclic-history](https://github.com/tylors/cyclic-history) is being used instead of cycle-history.
 
 ```js
 // main.js
 import {run} from '@cycle/core'
 import {makeDOMDriver} from 'cycle-snabbdom'
-import {makeHistoryDriver} from 'cyclic-history'
 import {makeRouterDriver} from 'cyclic-router'
 import {createHashHistory} from 'history'
 
@@ -47,11 +45,9 @@ import app from './app' // the function of your app
 run(app, {
   DOM: makeDOMDriver('#app'),
   // Notice how you need to feed in funcs from cyclic-history + history
-  router: makeRouterDriver(makeHistoryDriver(createHashHistory())),
+  router: makeRouterDriver(createHashHistory()),
 })
 ```
-
-In this instance we are using `cyclic-history` and `history` to deal with the history API, have a read of the history [docs](https://github.com/rackt/history/tree/master/docs#readme) to find out more information on how that all works.
 
 ###2.
 
@@ -86,15 +82,15 @@ function view(sidebar, children) {
 
 function App(sources) {
   const {router} = sources // get router out of sources
-  const {path$, value$} = router.define(routes) // pass routes into the router
-  const sidebar = Sidebar(sources, path$) // pass in sources and path$ into our sidebar
+  const match$ = router.define(routes) // pass routes into the router
+  const sidebar = Sidebar(sources, match$.pluck('path')) // pass in sources and path$ into our sidebar
 
   // childrenDOM$ takes path$ from `router.define(routes)` above and zips it with values, here is where
   // the components swap in reference to the current url, notice router.path(path) is also passed in
   // for later use in nested routes.
   // This allows components to be nested without ever knowing they are actually nested.
-  const childrenDOM$ = path$.zip(value$,
-    (path, value) => value({...sources, router: router.path(path)}).DOM
+  const childrenDOM$ = match$.map(
+    ({path, value}) => value({...sources, router: router.path(path)}).DOM
   )
 
   return {
@@ -161,36 +157,42 @@ const routes = {
   '/compose': Compose,
 }
 
-function view(createHref, path$, children) {
-  return path$.map(() => {
-    return div({},[
+function view(createHref) {
+  return (children) =>
+    div({}, [
       ul([
         li([
-          a({props: {href: createHref('/why')},
-          }, 'Why Cyclic Router?'),
+          a({props: {href: createHref('/why')}}, 'Why Cyclic Router?'),
         ]),
         li([
-          a({props: {href: createHref('/built')},
-          }, 'Built For Cycle.js'),
+          a({props: {href: createHref('/built')}}, 'Built For Cycle.js'),
         ]),
         li([
-          a({props: {href: createHref('/compose')},
-          }, 'Compose a Message'),
+          a({props: {href: createHref('/compose')}}, 'Compose a Message'),
         ]),
       ]),
       children,
     ])
-  })
 }
 
 function Inbox(sources) {
   const {router} = sources
-  const {path$, value$} = router.define(routes)
+  const match$ = router.define(routes)
 
-  const childrenDOM$ = value$.map(value => value(sources).DOM)
+  const childrenDOM$ = match$.map(({value}) => value(sources).DOM)
 
-  return {DOM: view(router.createHref, path$, childrenDOM$)}
+  return {DOM: childrenDOM$.map(view(router.createHref))}
 }
 
 export default Inbox
+```
+
+### Route Parameters
+
+You can pass route parameters to your component by adding them to the component sources.
+
+```js
+const routes = {
+  '/:id': id => sources => YourComponent({props$: Observable.of({id}), ...sources})
+}
 ```
