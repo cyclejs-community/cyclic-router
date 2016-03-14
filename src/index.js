@@ -1,3 +1,7 @@
 export {makeRouterDriver} from './makeRouterDriver'
 export {createRouter} from './createRouter'
-export {supportsHistory, createLocation} from './util'
+export {
+  supportsHistory,
+  createLocation,
+  createServerHistory,
+} from '@cycle/history'

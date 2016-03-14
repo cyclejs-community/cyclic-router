@@ -44,7 +44,7 @@ function getPathValue(pathname, definitions) {
  * @return {function}                          the public API function used
  * for `.define()`
  */
-function makeDefinitionResolver(history$, namespace, createHref) {
+function makeDefinitionResolver(history$, namespace, _createHref) {
   /**
    * Function used to match the current route to a set of routes using
    * switch-path
@@ -53,53 +53,24 @@ function makeDefinitionResolver(history$, namespace, createHref) {
    * @name define
    * @method define
    * @param  {Object}   definitions Route definitions as expected by switch-path
-   * @return {defineAPI}
+   * @return {Observable<Object>} an observable containing the `path` and
+   * `value` returned by switch-path. `location` as returned by @cycle/history
+   * and a createHref method for creating nested HREFs
    */
   return function define(definitions) {
-    const matches$ = history$.map(
-      ({pathname}) => {
-        const filteredPath = `/${filterPath(splitPath(pathname), namespace)}`
-        const {path, value} = getPathValue(filteredPath, definitions)
-        return {path, value, pathname}
-      }
-    )
+    const createHref = makeCreateHref(namespace, _createHref)
+    const match$ = history$.map(location => {
+      const {pathname} = location
+      const filteredPath = `/${filterPath(splitPath(pathname), namespace)}`
+      const {path, value} = getPathValue(filteredPath, definitions)
+      return {path, value, location, createHref}
+    }).replay(null, 1)
 
-    const path$ = matches$.pluck('path').replay(1)
-    const pathDisposable = path$.connect()
+    const disposable = match$.connect()
 
-    const value$ = matches$.pluck('value').replay(1)
-    const valueDisposable = value$.connect()
-
-    const fullPath$ = matches$.pluck('pathname').replay(1)
-    const fullPathDisposable = fullPath$.connect()
-
-    const dispose = () => {
-      pathDisposable.dispose()
-      fullPathDisposable.dispose()
-      valueDisposable.dispose()
-    }
-    /**
-     * Propeties and methods returned from define()
-     * @typedef {defineAPI}
-     * @name defineAPI
-     * @type {Object}
-     * @prop {Observable<string>} path$ - an Observable of the path matched
-     * by switch-path
-     * @prop {Observable<any>} value$ - an Observable of the value matched
-     * by switchPath
-     * @prop {Observable<string>} fullPath$ - an Observable of the current
-     * url entirely unfiltered
-     * @prop {createHref} createHref - method used to define nested HREFs
-     * @props {function} dispose() - method used to dispose of the history$
-     */
-    const defineAPI = {
-      path$,
-      value$,
-      fullPath$,
-      createHref: makeCreateHref(namespace, createHref),
-      dispose,
-    }
-    return defineAPI
+    match$.createHref = createHref
+    match$.dispose = () => disposable.dispose()
+    return match$
   }
 }
 

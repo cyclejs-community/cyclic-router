@@ -4,7 +4,6 @@
   <meta charset='utf-8' />
   <title>  | Documentation</title>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
-  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Source+Code+Pro:400,500,700' rel='stylesheet' type='text/css'>
   <link href='assets/bass.css' type='text/css' rel='stylesheet' />
   <link href='assets/style.css' type='text/css' rel='stylesheet' />
   <link href='assets/github.css' type='text/css' rel='stylesheet' />
@@ -28,11 +27,6 @@
                 createHref
               </a>
               <a
-                href='#createLocation'
-                class='block bold'>
-                createLocation
-              </a>
-              <a
                 href='#createRouter'
                 class='block bold'>
                 createRouter
@@ -41,16 +35,6 @@
                 href='#define'
                 class='block bold'>
                 define
-              </a>
-              <a
-                href='#defineAPI'
-                class='block bold'>
-                defineAPI
-              </a>
-              <a
-                href='#location'
-                class='block bold'>
-                location
               </a>
               <a
                 href='#makeRouterDriver'
@@ -72,11 +56,6 @@
                 class='block bold'>
                 routerDriver
               </a>
-              <a
-                href='#supportsHistory'
-                class='block bold'>
-                supportsHistory
-              </a>
           </div>
         </div>
       </div>
@@ -86,12 +65,18 @@
   <h2 id='createHref' class='mt0'>
     createHref<span class='gray'>(path)</span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/util.js#L81-L87'><code>src/util.js</code></a></p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/util.js#L52-L58'><code>src/util.js</code></a></p>
+  
+  
+  
+  
+  
   <p>Function used to create HREFs that are properly namespaced</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>path</strong>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>
+ <strong>path</strong>
           :
           <div class='force-inline'>
             <p>the HREF that will be appended to the current
@@ -101,7 +86,8 @@ namespace</p>
         </li>
     </ul>
       <h4>Returns</h4>
-      <code><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code></code>
+      <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>
+</code>
       :
       <div class='force-inline'>
         <p>a fully qualified HREF composed from the current
@@ -110,43 +96,25 @@ namespace and the path provided</p>
       </div>
 </section>
 </div><div class='py1'><section class='py2 clearfix'>
-  <h2 id='createLocation' class='mt0'>
-    createLocation<span class='gray'>([location])</span>
-  </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/util.js#L120-L125'><code>src/util.js</code></a></p>
-  <p>Create a location object - particularly useful for server-side rendering</p>
-
-    <h4>Parameters</h4>
-    <ul class='suppress-p-margin'>
-        <li><code>[<code><a href="#location">location</a></code>]</code> <strong>location</strong>
-            (default <code>locationDefaults</code>)
-          :
-          <div class='force-inline'>
-            <p>A location as
-defined by rackt/history with sane defaults</p>
-
-          </div>
-        </li>
-    </ul>
-      <h4>Returns</h4>
-      <code><code><a href="#location">location</a></code></code>
-      :
-      <div class='force-inline'>
-        <p>a complete location object as defined by
-rackt/history</p>
-
-      </div>
-</section>
-</div><div class='py1'><section class='py2 clearfix'>
   <h2 id='createRouter' class='mt0'>
     createRouter<span class='gray'>(history$)</span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/createRouter.js#L11-L13'><code>src/createRouter.js</code></a></p>
-  <p>Creates a router instance from a history$</p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/createRouter.js#L12-L14'><code>src/createRouter.js</code></a></p>
+  
+  
+  
+  
+  
+  <p>Creates a router instance from a history$. The history$ must have a
+<code>.createHref</code> method attached to it</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
-        <li><code>Observable</code><<code><a href="#location">location</a></code>> <strong>history$</strong>
+        <li>Observable
+.<
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Location">location</a>
+>
+ <strong>history$</strong>
           :
           <div class='force-inline'>
             <p>An observable of the
@@ -156,7 +124,8 @@ current location object as defined by rackt/history</p>
         </li>
     </ul>
       <h4>Returns</h4>
-      <code><code><a href="#routerAPI">routerAPI</a></code></code>
+      <code>routerAPI
+</code>
       
       <div class='force-inline'>
         
@@ -166,13 +135,19 @@ current location object as defined by rackt/history</p>
   <h2 id='define' class='mt0'>
     define<span class='gray'>(definitions)</span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/definitionResolver.js#L58-L103'><code>src/definitionResolver.js</code></a></p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/definitionResolver.js#L60-L74'><code>src/definitionResolver.js</code></a></p>
+  
+  
+  
+  
+  
   <p>Function used to match the current route to a set of routes using
 switch-path</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code> <strong>definitions</strong>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+ <strong>definitions</strong>
           :
           <div class='force-inline'>
             <p>Route definitions as expected by switch-path</p>
@@ -181,130 +156,48 @@ switch-path</p>
         </li>
     </ul>
       <h4>Returns</h4>
-      <code><code><a href="#defineAPI">defineAPI</a></code></code>
-      
+      <code>Observable
+.<
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+>
+</code>
+      :
       <div class='force-inline'>
-        
+        <p>an observable containing the <code>path</code> and
+<code>value</code> returned by switch-path. <code>location</code> as returned by @cycle/history
+and a createHref method for creating nested HREFs</p>
+
       </div>
 </section>
 </div><div class='py1'><section class='py2 clearfix'>
-  <h2 id='defineAPI' class='mt0'>
-    defineAPI<span class='gray'></span>
-  </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/definitionResolver.js#L95-L101'><code>src/definitionResolver.js</code></a></p>
-  <p>Propeties and methods returned from define()</p>
-
-    <h4>Properties</h4>
-    <ul class='suppress-p-margin'>
-        <li><code>Observable</code><<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>> <strong>path$</strong>
-              :
-              <div class='force-inline'>
-                <p>an Observable of the path matched
-by switch-path</p>
-
-              </div>
-            </li>
-        <li><code>Observable</code><<code>any</code>> <strong>value$</strong>
-              :
-              <div class='force-inline'>
-                <p>an Observable of the value matched
-by switchPath</p>
-
-              </div>
-            </li>
-        <li><code>Observable</code><<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>> <strong>fullPath$</strong>
-              :
-              <div class='force-inline'>
-                <p>an Observable of the current
-url entirely unfiltered</p>
-
-              </div>
-            </li>
-        <li><code><a href="#createHref">createHref</a></code> <strong>createHref</strong>
-              :
-              <div class='force-inline'>
-                <p>method used to define nested HREFs</p>
-
-              </div>
-            </li>
-    </li>
-</section>
-</div><div class='py1'><section class='py2 clearfix'>
-  <h2 id='location' class='mt0'>
-    location<span class='gray'></span>
-  </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/util.js#L103-L110'><code>src/util.js</code></a></p>
-  <p>Default parameters for createLocation; Same structure used by rackt/history</p>
-
-    <h4>Properties</h4>
-    <ul class='suppress-p-margin'>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>pathname</strong>
-              :
-              <div class='force-inline'>
-                <p>defaults to &apos;/&apos;</p>
-
-              </div>
-            </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>action</strong>
-              :
-              <div class='force-inline'>
-                <p>defaults to &apos;POP&apos;</p>
-
-              </div>
-            </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>hash</strong>
-              :
-              <div class='force-inline'>
-                <p>defaults to &apos;&apos;</p>
-
-              </div>
-            </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>search</strong>
-              :
-              <div class='force-inline'>
-                <p>defaults to  &apos;&apos;</p>
-
-              </div>
-            </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null">Null</a></code> <strong>state</strong>
-              :
-              <div class='force-inline'>
-                <p>defautls to null</p>
-
-              </div>
-            </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/null">Null</a></code> <strong>key</strong>
-              :
-              <div class='force-inline'>
-                <p>defaults to null</p>
-
-              </div>
-            </li>
-    </li>
-</section>
-</div><div class='py1'><section class='py2 clearfix'>
   <h2 id='makeRouterDriver' class='mt0'>
-    makeRouterDriver<span class='gray'>(historyDriver)</span>
+    makeRouterDriver<span class='gray'>(historyArgs)</span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/makeRouterDriver.js#L10-L27'><code>src/makeRouterDriver.js</code></a></p>
-  <p>Factory function that returns the router driver</p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/makeRouterDriver.js#L11-L27'><code>src/makeRouterDriver.js</code></a></p>
+  
+  
+  
+  
+  
+  <p>Instantiates an new router driver function using the same arguments required
+by @cycle/history.</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a></code> <strong>historyDriver</strong>
+        <li>...
+ <strong>historyArgs</strong>
           :
           <div class='force-inline'>
-            <p>a valid history API driver</p>
-
+            
           </div>
         </li>
     </ul>
       <h4>Returns</h4>
-      <code><code><a href="#routerDriver">routerDriver</a></code></code>
+      <code>routerDriver
+</code>
       :
       <div class='force-inline'>
-        <p>a router driver function composed
-with the history driver</p>
+        <p>The router driver function</p>
 
       </div>
 </section>
@@ -312,12 +205,18 @@ with the history driver</p>
   <h2 id='path' class='mt0'>
     path<span class='gray'>(pathname)</span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/pathFilter.js#L43-L49'><code>src/pathFilter.js</code></a></p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/pathFilter.js#L43-L49'><code>src/pathFilter.js</code></a></p>
+  
+  
+  
+  
+  
   <p>Filters the current location to easily create nested routes</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>pathname</strong>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>
+ <strong>pathname</strong>
           :
           <div class='force-inline'>
             <p>the route at which to filter</p>
@@ -326,7 +225,8 @@ with the history driver</p>
         </li>
     </ul>
       <h4>Returns</h4>
-      <code><code><a href="#routerAPI">routerAPI</a></code></code>
+      <code>routerAPI
+</code>
       
       <div class='force-inline'>
         
@@ -336,19 +236,26 @@ with the history driver</p>
   <h2 id='routerAPI' class='mt0'>
     routerAPI<span class='gray'></span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/api.js#L37-L43'><code>src/api.js</code></a></p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/api.js#L37-L43'><code>src/api.js</code></a></p>
+  
+  
+  
+  
+  
   <p>The Public API returned by the router driver, createRouter(), and .path()</p>
 
     <h4>Properties</h4>
     <ul class='suppress-p-margin'>
-        <li><code><a href="#path">path</a></code> <strong>path</strong>
+        <li>path
+ <strong>path</strong>
               :
               <div class='force-inline'>
                 <p>used for filtering routes to a given path</p>
 
               </div>
             </li>
-        <li><code><a href="#define">define</a></code> <strong>define</strong>
+        <li>define
+ <strong>define</strong>
               :
               <div class='force-inline'>
                 <p>used for defining a set of routes to values via
@@ -356,7 +263,11 @@ switch-path</p>
 
               </div>
             </li>
-        <li><code>Observable</code><<code><a href="#location">location</a></code>> <strong>observable</strong>
+        <li>Observable
+.<
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/Location">location</a>
+>
+ <strong>observable</strong>
               :
               <div class='force-inline'>
                 <p>a way to get access to the
@@ -364,7 +275,8 @@ current history$ from the historyDriver</p>
 
               </div>
             </li>
-        <li><code><a href="#createHref">createHref</a></code> <strong>createHref</strong>
+        <li>createHref
+ <strong>createHref</strong>
               :
               <div class='force-inline'>
                 <p>a method for create HREFs that are properly
@@ -372,7 +284,8 @@ prefixed for the current namespace</p>
 
               </div>
             </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a></code> <strong>dispose</strong>
+        <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a>
+ <strong>dispose</strong>
               :
               <div class='force-inline'>
                 <p>a method to dispose of the history$ returned
@@ -386,12 +299,25 @@ by <a href="#API">.observable</a></p>
   <h2 id='routerDriver' class='mt0'>
     routerDriver<span class='gray'>(sink$)</span>
   </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/makeRouterDriver.js#L23-L26'><code>src/makeRouterDriver.js</code></a></p>
+    <p><a href='https://github.com/tylors/cyclic-router/blob/332912f0626e1e010ac11afd6c4fd1cff7da1712/src/makeRouterDriver.js#L23-L26'><code>src/makeRouterDriver.js</code></a></p>
+  
+  
+  
+  
+  
   <p>The actual router driver.</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
-        <li><code>Observable</code><<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>> <strong>sink$</strong>
+        <li>Observable
+.<
+(
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>
+|
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+)
+>
+ <strong>sink$</strong>
           :
           <div class='force-inline'>
             <p>This is the same input that the
@@ -401,27 +327,11 @@ history driver would expect.</p>
         </li>
     </ul>
       <h4>Returns</h4>
-      <code><code><a href="#routerAPI">routerAPI</a></code></code>
+      <code>routerAPI
+</code>
       
       <div class='force-inline'>
         
-      </div>
-</section>
-</div><div class='py1'><section class='py2 clearfix'>
-  <h2 id='supportsHistory' class='mt0'>
-    supportsHistory<span class='gray'></span>
-  </h2>
-    <p><a href='https://github.com/TylorS/cyclic-router/blob/4fae46a162f169e32e02d512705619e14043cba5/src/util.js#L11-L28'><code>src/util.js</code></a></p>
-  <p>Function that returns whether or not the current environment
-supports the HistoryAPI</p>
-
-      <h4>Returns</h4>
-      <code><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code></code>
-      :
-      <div class='force-inline'>
-        <p>Returns true if the current environment supports
-the History API; false if it does not.</p>
-
       </div>
 </section>
 </div>

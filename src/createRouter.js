@@ -1,7 +1,8 @@
 import {createAPI} from './api'
 
 /**
- * Creates a router instance from a history$
+ * Creates a router instance from a history$. The history$ must have a
+ * `.createHref` method attached to it
  * @method createRouter
  * @public
  * @param  {Observable<location>}     history$ An observable of the
