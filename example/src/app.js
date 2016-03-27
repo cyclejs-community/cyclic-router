@@ -4,12 +4,14 @@ import Sidebar from './components/sidebar'
 import Home from './components/home'
 import Inbox from './components/inbox'
 import Compose from './components/compose'
+import Contact from './components/contact'
 import NotFound from './components/notfound'
 
 const routes = {
   '/': Home,
   '/inbox': Inbox,
   '/compose': Compose,
+  '/contact': Contact,
   '*': NotFound,
 }
 
@@ -53,12 +55,13 @@ function App(sources) {
   const {router} = sources
   const match$ = router.define(routes)
   const sidebar = Sidebar(sources, match$.pluck('path'))
-  const childrenDOM$ = match$.map(
-    ({path, value}) => value({...sources, router: router.path(path)}).DOM
+  const children$ = match$.map(
+    ({path, value}) => value({...sources, router: router.path(path)})
   )
 
   return {
-    DOM: sidebar.DOM.combineLatest(childrenDOM$, view),
+    DOM: sidebar.DOM.combineLatest(children$.map(x => x.DOM), view),
+    HTTP: children$.map(x => x.HTTP).filter(x => !!x).mergeAll(),
   }
 }
 
