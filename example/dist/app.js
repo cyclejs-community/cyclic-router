@@ -21030,7 +21030,7 @@ var _cycleSnabbdom = require('cycle-snabbdom');
 function Contact(sources) {
         var getContacts$ = _rx.Observable.just({}).map(function () {
                 return {
-                        url: '/example/contacts.json',
+                        url: 'cyclic-router/example/contacts.json',
                         method: 'GET'
                 };
         });
