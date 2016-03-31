@@ -2,19 +2,6 @@ import {makePathFilter} from './pathFilter'
 import {makeDefinitionResolver} from './definitionResolver'
 import {makeCreateHref} from './util'
 
-/**
- * Creates the public API returned by the base router driver
- * as well as the API which is returned by `.path()`
- * @private
- * @method createAPI
- * @param  {Observable<history.location>}  history$   Observable of the current
- * location as defined by rackt/history
- * @param  {Array<String>}  namespace  An array which contains all of the
- * `.path()`s that have be created to this point
- * @param  {function}  createHref This is the method to create a HREF as defined
- * by the history object that is passed to the history driver
- * @return {routerAPI}
- */
 function createAPI(history$, namespace, createHref) {
   const replayedHistory$ = history$.replay(null, 1)
   const disposable = replayedHistory$.connect()
