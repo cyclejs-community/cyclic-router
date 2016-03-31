@@ -28,6 +28,7 @@ function Sidebar(sources, path$) {
   const inboxHref = createHref('/inbox')
   const composeHref = createHref('/compose')
   const contactHref = createHref('/contact')
+  const newHref = createHref('/new')
 
   const view$ = path$.map(() => {
     return ul({style: ulStyle},[
@@ -39,6 +40,9 @@ function Sidebar(sources, path$) {
       ]),
       li({style: liStyle}, [
         a({style: linkStyle, props: {href: contactHref}}, 'Contacts'),
+      ]),
+      li({style: liStyle}, [
+        a({style: linkStyle, props: {href: newHref}}, 'New'),
       ]),
     ])
   })

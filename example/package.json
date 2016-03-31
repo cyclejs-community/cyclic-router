@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "@cycle/core": "^6.0.3",
+    "@cycle/http": "^8.2.2",
     "cycle-snabbdom": "^1.2.0",
     "history": "^2.0.1",
     "rx": "^4.1.0"
