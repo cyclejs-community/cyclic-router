@@ -4,7 +4,7 @@ import {div, h2, ul, li} from 'cycle-snabbdom'
 function Contact(sources) {
   const getContacts$ = Observable.just({})
           .map(() => ({
-            url: 'cyclic-router/example/contacts.json',
+            url: '/cyclic-router/example/contacts.json',
             method: 'GET',
           }))
   const contacts$ = sources.HTTP
