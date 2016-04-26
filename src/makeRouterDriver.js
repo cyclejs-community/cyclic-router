@@ -1,5 +1,6 @@
 import {createAPI} from './api'
 import {makeHistoryDriver} from '@cycle/history'
+import rxAdapter from '@cycle/rx-adapter'
 
 /**
  * Instantiates an new router driver function using the same arguments required
@@ -20,10 +21,13 @@ function makeRouterDriver(...historyArgs) {
    * history driver would expect.
    * @return {routerAPI}
    */
-  return function routerDriver(sink$) {
+  function routerDriver(sink$, runStreamAdapter) {
     const history$ = historyDriver(sink$)
-    return createAPI(history$.share(), [], history$.createHref)
+    const adapt = stream => runStreamAdapter.adapt(stream, rxAdapter.streamSubscribe)
+    return createAPI(history$.share(), [], history$.createHref, adapt)
   }
+  routerDriver.streamAdapter = rxAdapter
+  return routerDriver
 }
 
 export {makeRouterDriver}

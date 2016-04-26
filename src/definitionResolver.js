@@ -2,7 +2,7 @@ import switchPath from 'switch-path'
 
 import {splitPath, filterPath, makeCreateHref} from './util'
 
-function makeDefinitionResolver(history$, namespace, _createHref) {
+function makeDefinitionResolver(history$, namespace, _createHref, adapt) {
   /**
    * Function used to match the current route to a set of routes using
    * switch-path
@@ -28,7 +28,7 @@ function makeDefinitionResolver(history$, namespace, _createHref) {
 
     match$.createHref = createHref
     match$.dispose = () => disposable.dispose()
-    return match$
+    return adapt(match$)
   }
 }
 
