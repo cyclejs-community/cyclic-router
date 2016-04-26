@@ -8,7 +8,7 @@ function isStrictlyInScope(namespace, path) {
   })
 }
 
-function makePathFilter(history$, namespace, createHref) {
+function makePathFilter(history$, namespace, createHref, adapt) {
   /**
    * Filters the current location to easily create nested routes
    * @public
@@ -23,7 +23,7 @@ function makePathFilter(history$, namespace, createHref) {
     const scopedHistory$ = history$.filter(
       ({pathname: _path}) => isStrictlyInScope(scopedNamespace, _path)
     )
-    return createAPI(scopedHistory$, scopedNamespace, createHref)
+    return createAPI(scopedHistory$, scopedNamespace, createHref, adapt)
   }
 }
 

@@ -2,7 +2,7 @@ import {makePathFilter} from './pathFilter'
 import {makeDefinitionResolver} from './definitionResolver'
 import {makeCreateHref} from './util'
 
-function createAPI(history$, namespace, createHref) {
+function createAPI(history$, namespace, createHref, adapt) {
   const replayedHistory$ = history$.replay(null, 1)
   const disposable = replayedHistory$.connect()
 
@@ -22,9 +22,9 @@ function createAPI(history$, namespace, createHref) {
    * by [.observable](#API)
    */
   return {
-    path: makePathFilter(replayedHistory$, namespace, createHref),
-    define: makeDefinitionResolver(replayedHistory$, namespace, createHref),
-    observable: replayedHistory$,
+    path: makePathFilter(replayedHistory$, namespace, createHref, adapt),
+    define: makeDefinitionResolver(replayedHistory$, namespace, createHref, adapt),
+    observable: adapt(replayedHistory$),
     createHref: makeCreateHref(namespace, createHref),
     dispose: () => disposable.dispose(),
   }
