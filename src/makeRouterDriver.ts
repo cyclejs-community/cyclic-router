@@ -1,8 +1,6 @@
 import {StreamAdapter} from '@cycle/base';
 import {makeHistoryDriver} from '@cycle/history';
-import {Location, Pathname, History, HistoryDriverOptions} from '@cycle/history/lib/interfaces';
-import XSAdapter from '@cycle/xstream-adapter';
-import {Stream} from 'xstream';
+import {History, HistoryDriverOptions} from '@cycle/history/lib/interfaces';
 
 import {RouterSource} from './RouterSource';
 
@@ -21,17 +19,14 @@ function makeRouterDriver(history: History, options?: HistoryDriverOptions) {
    * @typedef {routerDriver}
    * @name routerDriver
    * @method routerDriver
-   * @param  {Observable<string|Object>} sink$ - This is the same input that the
+   * @param  {Stream<string|Location>} sink$ - This is the same input that the
    * history driver would expect.
    * @return {routerAPI}
    */
-  function routerDriver(sink$: Stream<Location | Pathname>, runSA: StreamAdapter) {
-    const history$ = historyDriver(sink$, XSAdapter);
-    return new RouterSource(history$, [], history$.createHref, runSA);
-  }
-
-  (<any> routerDriver).streamAdapter = XSAdapter;
-  return routerDriver;
+  return function routerDriver(sink$: any, runSA: StreamAdapter) {
+    const history$ = historyDriver(sink$, runSA);
+    return new RouterSource(history$, [], history$.createHref);
+  };
 }
 
 export {makeRouterDriver}

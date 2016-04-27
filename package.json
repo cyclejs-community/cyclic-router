@@ -52,7 +52,11 @@
   "scripts": {
     "lint": "tslint -c tslint.json src/*.ts src/**/*.ts",
     "test-node": "mocha -r babel-register test/index.js",
+    "test-browser": "testem",
+    "pretest": "npm run lib",
     "test": "npm run lint && npm run lib && npm run test-node",
+    "pretest-ci": "npm run lib",
+    "test-ci": "npm run lint && npm run test-node && testem ci",
     "predist": "rm -rf dist/ && mkdirp dist/",
     "prelib": "typings install",
     "lib": "tsc",
