@@ -1,6 +1,9 @@
 # cyclic-router
 cyclic-router is a Router Driver built for Cycle.js
 
+**Disclaimer** v2.x.x is for Cycle Diversity!
+If you are still using @cycle/core please continue to use v1.x.x
+
 ## Installation
 
 Using [npm](https://www.npmjs.com/):
@@ -21,170 +24,37 @@ var makeRouterDriver = require('cyclic-router').makeRouterDriver
 
 For API documentation pleave visit this link [here](http://tylors.github.io/cyclic-router/docs/)
 
-## Example
-
-The example found in the repo can be taken for a test-drive [here](http://tylors.github.io/cyclic-router/example)
-
-## Getting started
-
-###1.
-
-Here is a rundown of the `example` provided with this repo in the folder `/example`. This should allow a better understanding of how to use cyclic-router, for simplicity the styling has been removed here.
-
-Starting in the file which has Cycle `run`, router driver needs to be created here along with the other drivers that you might be using.
+## Basic Usage
 
 ```js
-// main.js
-import {run} from '@cycle/core'
-import {makeDOMDriver} from 'cycle-snabbdom'
-import {makeRouterDriver} from 'cyclic-router'
-import {createHashHistory} from 'history'
+import xs from 'xstream';
+import Cycle from '@cycle/xstream-run';
+import {makeDOMDriver} from '@cycle/dom';
+import {makeRouterDriver} from 'cyclic-router';
+import {createHistory} from 'history';
 
-import app from './app' // the function of your app
-
-run(app, {
-  DOM: makeDOMDriver('#app'),
-  // Notice how you need to feed in funcs from cyclic-history + history
-  router: makeRouterDriver(createHashHistory()),
-})
-```
-
-###2.
-
-App.js will be used as the place for showing the correct component in reference to current url (what you'd expect from a router!).
-When creating your `routes` object keep in mind that cyclic-router uses [switch-path](https://github.com/staltz/switch-path) and it is worth checking out that repo to understand the structure that `switch-path` expects.
-
-```js
-// app.js
-import {div, nav} from 'cycle-snabbdom'
-
-import Sidebar from './components/sidebar'
-import Home from './components/home'
-import Inbox from './components/inbox'
-import Compose from './components/compose'
-import NotFound from './components/notfound'
-
-// routes is used for matching a route to a component
-const routes = {
-  '/': Home,
-  '/inbox': Inbox,
-  '/compose': Compose,
-  '*': NotFound,
-}
-
-// the view has sidebar & children passed in
-function view(sidebar, children) {
-  return div([
-      nav([sidebar]),
-      div([children]),
-    ])
-}
-
-function App(sources) {
-  const {router} = sources // get router out of sources
-  const match$ = router.define(routes) // pass routes into the router
-  const sidebar = Sidebar(sources, match$.pluck('path')) // pass in sources and path$ into our sidebar
-
-  // childrenDOM$ takes path$ from `router.define(routes)` above and zips it with values, here is where
-  // the components swap in reference to the current url, notice router.path(path) is also passed in
-  // for later use in nested routes.
-  // This allows components to be nested without ever knowing they are actually nested.
-  const childrenDOM$ = match$.map(
-    ({path, value}) => value({...sources, router: router.path(path)}).DOM
-  )
-
+function main(sources) {
+  const match$ = sources.router.define({
+    '/': HomeComponent,
+    '/other': OtherComponent
+  });
+  
+  const page$ = match$.map(({path, value}) => {
+    return value(Object.assign({}, sources, {
+      router: sources.router.path(path);
+    }));
+  });
+  
   return {
-    DOM: sidebar.DOM.combineLatest(childrenDOM$, view),
-  }
+    DOM: page$.map(c => c.DOM).flatten(),
+    router: xs.of('/other'),
+  };
 }
 
-export default App
-```
-
-
-###3.
-
-Next, lets look at what triggers these url changes inside the sidebar
-
-```js
-// ./components/sidebar.js
-import {ul, li, a} from 'cycle-snabbdom'
-
-function Sidebar(sources, path$) {
-  // take out createHref from our sources
-  const {router: {createHref}} = sources
-
-  // here the urls we want to use are passed into createHref.
-  // createHref() will always create the proper href no matter how far it is nested within a hierarchy.
-  const inboxHref = createHref('/inbox')
-  const composeHref = createHref('/compose')
-  const contactHref = createHref('/contact')
-
-  // adding li's links and giving them Href's from above
-  const view$ = path$.map(() => {
-    return ul({style: ulStyle},[
-      li([a({props: {href: inboxHref}}, 'Inbox')]),
-      li([a({props: {href: composeHref}}, 'Compose')]),
-      li([a({props: {href: contactHref}}, 'Contacts')]),
-    ])
-  })
-
-  return {DOM: view$}
-}
-
-export default Sidebar
-```
-
-At this point you are at a good stage to be able to make a simple app/site with multiple pages. Next taking a look at nesting these routes directly within children components.
-
-
-###4.
-
-Nested routing becomes very trivial, as you can see below it is as simple as repeating the same steps as above.
-
-```js
-// ./components/inbox/index.js
-import {div, ul, li, a} from 'cycle-snabbdom'
-
-import Why from './why'
-import Compose from './compose'
-import Built from './built'
-
-const routes = {
-  '*': () => ({DOM: div({style: {opacity: 0}})}),
-  '/why': Why,
-  '/built': Built,
-  '/compose': Compose,
-}
-
-function view(createHref) {
-  return (children) =>
-    div({}, [
-      ul([
-        li([
-          a({props: {href: createHref('/why')}}, 'Why Cyclic Router?'),
-        ]),
-        li([
-          a({props: {href: createHref('/built')}}, 'Built For Cycle.js'),
-        ]),
-        li([
-          a({props: {href: createHref('/compose')}}, 'Compose a Message'),
-        ]),
-      ]),
-      children,
-    ])
-}
-
-function Inbox(sources) {
-  const {router} = sources
-  const match$ = router.define(routes)
-
-  const childrenDOM$ = match$.map(({value}) => value(sources).DOM)
-
-  return {DOM: childrenDOM$.map(view(router.createHref))}
-}
-
-export default Inbox
+Cycle.run(main, {
+  DOM: makeDOMDriver('#app'),
+  router: makeRouterDriver(createHistory())
+});
 ```
 
 ### Route Parameters
