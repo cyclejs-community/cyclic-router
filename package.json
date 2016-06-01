@@ -19,7 +19,7 @@
   "homepage": "https://github.com/TylorS/cyclic-router#readme",
   "dependencies": {
     "@cycle/history": "^3.0.4",
-    "history": "^2.1.0",
+    "history": "^3.0.0",
     "switch-path": "^1.1.6"
   },
   "devDependencies": {
