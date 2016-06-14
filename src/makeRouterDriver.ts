@@ -24,8 +24,8 @@ function makeRouterDriver(history: History, options?: HistoryDriverOptions) {
    * @return {routerAPI}
    */
   return function routerDriver(sink$: any, runSA: StreamAdapter) {
-    const history$ = historyDriver(sink$, runSA);
-    return new RouterSource(history$, [], history$.createHref);
+    const history$ = runSA.remember(historyDriver(sink$, runSA));
+    return new RouterSource(history$, [], history.createHref, runSA);
   };
 }
 

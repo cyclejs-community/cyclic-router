@@ -123,7 +123,7 @@ describe('Cyclic Router - XStream', () => {
       '`createHref` and `dispose`',
       () => {
         const history = createServerHistory()
-        const router = makeRouterDriver(history)(xs.of('/').merge(xs.never()), XSAdapter)
+        const router = makeRouterDriver(history)(xs.merge(xs.never(), xs.of('/')), XSAdapter)
           .define({})
         assert.strictEqual(router instanceof xs, true)
         assert.strictEqual(typeof router.addListener, 'function')
@@ -138,12 +138,8 @@ describe('Cyclic Router - XStream', () => {
         },
       }
 
-      const routes = [
-        '/some/route',
-      ]
-
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes).merge(xs.never()), XSAdapter)
+      const history = createServerHistory('/some/route')
+      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
       const match$ = router.define(defintion)
 
       match$.addListener({
@@ -166,12 +162,11 @@ describe('Cyclic Router - XStream', () => {
       }
 
       const routes = [
-        '/wrong/path',
         '/some/nested/correct/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes).merge(xs.never()), XSAdapter)
+      const history = createServerHistory('/wrong/path')
+      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
       const match$ = router.path('/some').path('/nested').define(defintion)
 
       match$.addListener({
@@ -184,6 +179,10 @@ describe('Cyclic Router - XStream', () => {
         error: () => {},
         complete: () => {},
       })
+
+      setTimeout(() => {
+        history.push('/some/nested/correct/route')
+      })
     })
 
     it('should match a default route if one is not found', done => {
@@ -194,14 +193,8 @@ describe('Cyclic Router - XStream', () => {
         '*': 999,
       }
 
-      const routes = [
-        '/wrong/path',
-        '/wrong/route',
-        '/some/nested/incorrect/route',
-      ]
-
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes).merge(xs.never()), XSAdapter)
+      const history = createServerHistory('/wrong/path')
+      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
       const match$ = router.path('/some').path('/nested').define(definition)
 
       match$.addListener({
@@ -214,35 +207,39 @@ describe('Cyclic Router - XStream', () => {
         error: () => {},
         complete: () => {},
       })
+
+      history.push('/wrong/route')
+      history.push('/some/nested/incorrect/route')
     })
 
     it('should create a proper href using createHref()', done => {
-      const defintion = {
+      const definition = {
         '/correct': {
           '/route': 123,
         },
         '*': 999,
       }
 
-      const routes = [
-        '/wrong/path',
-        '/some/nested/correct/route',
-      ]
-
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes).merge(xs.never()), XSAdapter)
-      const match$ = router
-          .path('/some').path('/nested').define(defintion)
+      const history = createServerHistory('/wrong/path')
+      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
+      const match$ = router.path('/some').path('/nested').define(definition)
 
       match$.addListener({
-        next: ({location: {pathname}, createHref}) => {
-          assert.strictEqual(pathname, '/some/nested/correct/route')
-          assert.strictEqual(createHref('/correct/route'), pathname)
+        next: ({path, value, location, createHref}) => {
+          assert.strictEqual(path, '/incorrect/route')
+          assert.strictEqual(value, 999)
+          assert.strictEqual(location.pathname, '/some/nested/incorrect/route')
+          //assert.strictEqual(location.pathname, createHref('/incorrect/route'))
           done()
         },
         error: () => {},
-        complete: () => {}
+        complete: () => {},
       })
+
+      assert(match$.createHref('/hello'), '/some/nested/hello')
+
+      history.push('/wrong/route')
+      history.push('/some/nested/incorrect/route')
     })
 
     it('should match partials', done => {
@@ -253,18 +250,13 @@ describe('Cyclic Router - XStream', () => {
         '*': 999,
       }
 
-      const routes = [
-        '/wrong/path',
-        '/some/nested/correct/route/partial',
-      ]
-
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes).merge(xs.never()), XSAdapter)
+      const history = createServerHistory('/wrong/path')
+      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
       const match$ = router
           .path('/some').path('/nested').define(defintion)
 
       match$.addListener({
-        next: ({path, location: {pathname}}) => {
+        next: ({path, location: {pathname}, createHref}) => {
           assert.strictEqual(path, '/correct/route')
           assert.strictEqual(pathname, '/some/nested/correct/route/partial')
           done()
@@ -272,6 +264,8 @@ describe('Cyclic Router - XStream', () => {
         error: () => {},
         complete: () => {},
       })
+
+      history.push('/some/nested/correct/route/partial')
     })
   })
 })

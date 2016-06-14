@@ -26,9 +26,9 @@ function makeCreateHref(namespace: Pathname[], _createHref: (pathname: Pathname)
    */
   return function createHref(path: Pathname): Pathname {
     const fullPath = `${namespace.join('/')}${path}`;
-    return startsWith(fullPath, '/') || startsWith2(fullPath, '#', '/') ?
-      _createHref(fullPath) :
-      _createHref('/' + fullPath);
+    return startsWith(fullPath, '/') || startsWith2(fullPath, '#', '/')
+      ? _createHref(fullPath)
+      : _createHref('/' + fullPath);
   };
 }
 

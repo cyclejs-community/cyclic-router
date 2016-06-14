@@ -1,3 +1,4 @@
+import {StreamAdapter} from '@cycle/base';
 import {Location, Pathname} from '@cycle/history/lib/interfaces';
 import switchPath, {RouteDefinitions} from 'switch-path';
 
@@ -18,30 +19,33 @@ function getFilteredPath(namespace: Pathname[], path: Pathname): Pathname {
 export class RouterSource {
   constructor(private _history$: any,
               private _namespace: Pathname[],
-              private _createHref: (path: Pathname) => Pathname) {}
+              private _createHref: (path: Pathname) => Pathname,
+              private _runSA: StreamAdapter) {}
 
   get history$() {
-    return this._history$;
+    return this._runSA.remember(this._history$);
   }
 
   path(pathname: Pathname): RouterSource {
     const scopedNamespace = this._namespace.concat(util.splitPath(pathname));
-    const scopedHistory$ = this._history$
-      .filter(({pathname: _path}) => isStrictlyInScope(scopedNamespace, _path));
+    const scopedHistory$ = this._runSA.remember(this._history$
+      .filter(({pathname: _path}: Location) => isStrictlyInScope(scopedNamespace, _path)));
 
-    return new RouterSource(scopedHistory$, scopedNamespace, this._createHref);
+    const createHref = this._createHref;
+    return new RouterSource(scopedHistory$, scopedNamespace, createHref, this._runSA);
   }
 
   define(routes: RouteDefinitions): any {
     const namespace = this._namespace;
-    const createHref = util.makeCreateHref(namespace, this._createHref);
+    const _createHref = this._createHref;
+    const createHref = util.makeCreateHref(namespace, _createHref);
 
-    let match$ = this._history$
+    let match$ = this._runSA.remember(this._history$
       .map((location: Location) => {
         const filteredPath = getFilteredPath(namespace, location.pathname);
         const {path, value} = switchPath(filteredPath, routes);
         return {path, value, location, createHref};
-      });
+      }));
 
     match$.createHref = createHref;
     return match$;
