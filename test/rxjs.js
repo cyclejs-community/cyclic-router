@@ -18,7 +18,7 @@ describe('Cyclic Router - Rx 5', () => {
       it('should return an object with `path` `define` `observable` ' +
         '`createHref` and `dispose`',
         () => {
-          const history = createServerHistory()
+          const history = createServerHistory('/')
           const router = makeRouterDriver(history)(Observable.of('/'), RxAdapter)
           assert.notStrictEqual(router.path, null)
           assert.strictEqual(typeof router.path, 'function')
@@ -37,7 +37,7 @@ describe('Cyclic Router - Rx 5', () => {
     it('should return an object with `path` `define` `observable` ' +
       '`createHref` and `dispose`',
       () => {
-        const history = createServerHistory()
+        const history = createServerHistory('/')
         const router = makeRouterDriver(history)(Observable.of('/'), RxAdapter)
           .path('/')
         assert.notStrictEqual(router.path, null)
@@ -56,14 +56,16 @@ describe('Cyclic Router - Rx 5', () => {
         '/somewhere/else',
         '/path/that/is/correct',
       ]
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
         .path('/path')
 
       router.history$.subscribe((location) => {
         assert.notStrictEqual(location.pathname, '/somewhere/else')
         assert.strictEqual(location.pathname, '/path/that/is/correct')
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('multiple path()s should filter the history$', () => {
@@ -73,8 +75,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
 
@@ -82,6 +84,8 @@ describe('Cyclic Router - Rx 5', () => {
         assert.strictEqual(pathname,
           '/some/really/really/deeply/nested/route/that/is/correct')
       })
+
+      routes.forEach(r => history.push(r))
     })
 
     it('should create a proper path using createHref()', () => {
@@ -91,8 +95,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
 
@@ -103,6 +107,8 @@ describe('Cyclic Router - Rx 5', () => {
           router.createHref('/is/correct'),
           '/some/really/really/deeply/nested/route/that/is/correct')
       })
+      routes.forEach(r => history.push(r))
+
     })
   })
 
@@ -110,7 +116,7 @@ describe('Cyclic Router - Rx 5', () => {
     it('should return an object with `path$` `value$` `fullPath$` ' +
       '`createHref` and `dispose`',
       () => {
-        const history = createServerHistory()
+        const history = createServerHistory('/')
         const router = makeRouterDriver(history)(Observable.of('/'), RxAdapter)
           .define({})
         assert.strictEqual(router instanceof Observable, true)
@@ -130,16 +136,17 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
       const match$ = router.define(defintion)
 
-      match$.subscribe(({path, value, location}) => {
+      match$.skip(1).subscribe(({path, value, location}) => {
         assert.strictEqual(path, '/some/route')
         assert.strictEqual(value, 123)
         assert.strictEqual(location.pathname, '/some/route')
         done()
       })
+      routes.forEach(r => history.push(r))
     })
 
     it('should respect prior filtering by path()', done => {
@@ -154,8 +161,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/correct/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
       const match$ = router.path('/some').path('/nested').define(defintion)
 
       match$.subscribe(({path, value, location}) => {
@@ -164,6 +171,8 @@ describe('Cyclic Router - Rx 5', () => {
         assert.strictEqual(location.pathname, '/some/nested/correct/route')
         done()
       })
+      routes.forEach(r => history.push(r))
+
     })
 
     it('should match a default route if one is not found', done => {
@@ -180,8 +189,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/incorrect/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
       const match$ = router.path('/some').path('/nested').define(definition)
 
       match$.subscribe(({path, value, location}) => {
@@ -190,6 +199,8 @@ describe('Cyclic Router - Rx 5', () => {
         assert.strictEqual(location.pathname, '/some/nested/incorrect/route')
         done()
       })
+      routes.forEach(r => history.push(r))
+
     })
 
     it('should create a proper href using createHref()', done => {
@@ -205,8 +216,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/correct/route',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
       const match$ = router
           .path('/some').path('/nested').define(defintion)
 
@@ -215,6 +226,8 @@ describe('Cyclic Router - Rx 5', () => {
         assert.strictEqual(createHref('/correct/route'), pathname)
         done()
       })
+      routes.forEach(r => history.push(r))
+
     })
 
     it('should match partials', done => {
@@ -230,8 +243,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/correct/route/partial',
       ]
 
-      const history = createServerHistory()
-      const router = makeRouterDriver(history)(Observable.from(routes), RxAdapter)
+      const history = createServerHistory('/')
+      const router = makeRouterDriver(history)(Observable.never(), RxAdapter)
       const match$ = router
           .path('/some').path('/nested').define(defintion)
 
@@ -240,6 +253,7 @@ describe('Cyclic Router - Rx 5', () => {
         assert.strictEqual(pathname, '/some/nested/correct/route/partial')
         done()
       })
+      routes.forEach(r => history.push(r))
     })
   })
 })
