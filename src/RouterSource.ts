@@ -17,19 +17,23 @@ function getFilteredPath(namespace: Pathname[], path: Pathname): Pathname {
 }
 
 export class RouterSource {
-  constructor(private _history$: any,
+  _history$: any;
+  constructor(_history$: any,
               private _namespace: Pathname[],
               private _createHref: (path: Pathname) => Pathname,
-              private _runSA: StreamAdapter) {}
+              private _runSA: StreamAdapter) {
+    this._history$ = _runSA.remember(_history$);
+
+  }
 
   get history$() {
-    return this._runSA.remember(this._history$);
+    return this._history$;
   }
 
   path(pathname: Pathname): RouterSource {
     const scopedNamespace = this._namespace.concat(util.splitPath(pathname));
-    const scopedHistory$ = this._runSA.remember(this._history$
-      .filter(({pathname: _path}: Location) => isStrictlyInScope(scopedNamespace, _path)));
+    const scopedHistory$ = this._history$
+      .filter(({pathname: _path}: Location) => isStrictlyInScope(scopedNamespace, _path));
 
     const createHref = this._createHref;
     return new RouterSource(scopedHistory$, scopedNamespace, createHref, this._runSA);
@@ -40,12 +44,12 @@ export class RouterSource {
     const _createHref = this._createHref;
     const createHref = util.makeCreateHref(namespace, _createHref);
 
-    let match$ = this._runSA.remember(this._history$
+    let match$ = this._history$
       .map((location: Location) => {
         const filteredPath = getFilteredPath(namespace, location.pathname);
         const {path, value} = switchPath(filteredPath, routes);
         return {path, value, location, createHref};
-      }));
+      });
 
     match$.createHref = createHref;
     return match$;
