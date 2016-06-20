@@ -22,7 +22,7 @@ var makeRouterDriver = require('cyclic-router').makeRouterDriver
 
 ## API
 
-For API documentation pleave visit this link [here](http://tylors.github.io/cyclic-router/docs/)
+For API documentation pleave visit this link [here](http://cyclejs-community.github.io/cyclic-router/docs/)
 
 ## Basic Usage
 
