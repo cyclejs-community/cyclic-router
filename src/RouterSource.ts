@@ -36,12 +36,12 @@ export class RouterSource {
     const _createHref = this._createHref;
     const createHref = util.makeCreateHref(namespace, _createHref);
 
-    let match$ = this.history$
+    let match$ = this._runSA.remember(this.history$
       .map((location: Location) => {
         const filteredPath = getFilteredPath(namespace, location.pathname);
         const {path, value} = switchPath(filteredPath, routes);
         return {path, value, location, createHref};
-      });
+      }));
 
     match$.createHref = createHref;
     return match$;
