@@ -41,7 +41,7 @@
     "testem": "^1.6.0",
     "tslint": "^3.10.2",
     "typescript": "^1.8.10",
-    "typings": "^0.8.1",
+    "typings": "^1.0.4",
     "uglify-js": "^2.6.2",
     "validate-commit-message": "^3.0.1",
     "xstream": "^5.0.6"
