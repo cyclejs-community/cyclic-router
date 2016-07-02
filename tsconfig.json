@@ -15,9 +15,8 @@
     "tabSize": 2
   },
    "files": [
-     "typings/main.d.ts",
-     "src/custom-typings/main.d.ts",
-     "src/index.ts"
+     "src/index.ts",
+     "src/switch-path.d.ts"
    ],
    "exclude": [
      "node_modules"
