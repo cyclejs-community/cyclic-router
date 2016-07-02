@@ -1,7 +1,7 @@
 import {StreamAdapter} from '@cycle/base';
 import {Location, Pathname} from '@cycle/history/lib/interfaces';
-import switchPath, {RouteDefinitions} from 'switch-path';
-
+import switchPath from 'switch-path';
+import {RouteDefinitions, SwitchPathReturn} from './interfaces';
 import * as util from './util';
 
 function isStrictlyInScope(namespace: Pathname[], path: Pathname): boolean {
@@ -39,7 +39,7 @@ export class RouterSource {
     let match$ = this._runSA.remember(this.history$
       .map((location: Location) => {
         const filteredPath = getFilteredPath(namespace, location.pathname);
-        const {path, value} = switchPath(filteredPath, routes);
+        const {path, value} = <SwitchPathReturn>switchPath(filteredPath, routes);
         return {path, value, location, createHref};
       }));
 
