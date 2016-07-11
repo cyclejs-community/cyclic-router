@@ -41,7 +41,7 @@ function main(sources) {
   
   const page$ = match$.map(({path, value}) => {
     return value(Object.assign({}, sources, {
-      router: sources.router.path(path);
+      router: sources.router.path(path)
     }));
   });
   
