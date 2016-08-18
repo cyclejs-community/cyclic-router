@@ -44,7 +44,7 @@
     "typings": "^0.8.1",
     "uglify-js": "^2.7.1",
     "validate-commit-message": "^3.0.1",
-    "xstream": "^5.0.6"
+    "xstream": "^5.3.0"
   },
   "config": {
     "ghooks": {
