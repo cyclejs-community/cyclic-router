@@ -20,7 +20,7 @@
   "dependencies": {
     "@cycle/history": "^4.0.0",
     "history": "^3.0.0",
-    "switch-path": "^1.1.7"
+    "switch-path": "^1.1.8"
   },
   "devDependencies": {
     "@cycle/base": "^4.0.0",
