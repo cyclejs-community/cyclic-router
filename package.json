@@ -42,7 +42,7 @@
     "tslint": "^3.10.2",
     "typescript": "^1.8.10",
     "typings": "^0.8.1",
-    "uglify-js": "^2.7.1",
+    "uglify-js": "^2.7.2",
     "validate-commit-message": "^3.0.1",
     "xstream": "^5.0.6"
   },
