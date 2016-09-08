@@ -19,8 +19,7 @@
   "homepage": "https://github.com/TylorS/cyclic-router#readme",
   "dependencies": {
     "@cycle/history": "^4.0.0",
-    "history": "^3.0.0",
-    "switch-path": "^1.1.7"
+    "history": "^3.0.0"
   },
   "devDependencies": {
     "@cycle/base": "^4.0.0",
@@ -44,7 +43,8 @@
     "typings": "^0.8.1",
     "uglify-js": "^2.7.1",
     "validate-commit-message": "^3.0.1",
-    "xstream": "^5.0.6"
+    "xstream": "^5.0.6",
+    "switch-path": "^1.1.8"
   },
   "config": {
     "ghooks": {

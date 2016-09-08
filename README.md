@@ -1,14 +1,21 @@
 # cyclic-router
 cyclic-router is a Router Driver built for Cycle.js
 
-**Disclaimer** v2.x.x is for Cycle Diversity!
+**Disclaimer** v2.x.x and v3 are for Cycle Diversity!
 If you are still using @cycle/core please continue to use v1.x.x
 
 ## Installation
 
 Using [npm](https://www.npmjs.com/):
 
-    $ npm install cyclic-router
+    $ npm install --save cyclic-router
+
+Version 3 requires users to inject the route matcher.  We'll use `switch-path` for our examples but other
+matching libraries could be adapted to be used here:
+
+    $ npm install --save switch-path
+
+Note: Version 2 and below use `switch-path` for the route matcher always and the above library install is not necesssary/done implicitly.
 
 Then with a module bundler like [browserify](http://browserify.org/), use as you would anything else:
 
@@ -22,7 +29,7 @@ var makeRouterDriver = require('cyclic-router').makeRouterDriver
 
 ## API
 
-For API documentation pleave visit this link [here](http://cyclejs-community.github.io/cyclic-router/docs/)
+For API documentation please visit this link [here](http://cyclejs-community.github.io/cyclic-router/docs/)
 
 ## Basic Usage
 
@@ -32,6 +39,7 @@ import Cycle from '@cycle/xstream-run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeRouterDriver} from 'cyclic-router';
 import {createHistory} from 'history';
+import switchPath from 'switch-path';  // Required in v3, not required in v2 or below 
 
 function main(sources) {
   const match$ = sources.router.define({
@@ -53,13 +61,14 @@ function main(sources) {
 
 Cycle.run(main, {
   DOM: makeDOMDriver('#app'),
-  router: makeRouterDriver(createHistory())
+  router: makeRouterDriver(createHistory(), switchPath)  // v3
+  // router: makeRouterDriver(createHistory()) // <= v2
 });
 ```
 
 ### Route Parameters
 
-You can pass route parameters to your component by adding them to the component sources.
+This behavior changes based on the injected route matcher.  In the case of `switch-path`, you can pass route parameters to your component by adding them to the component sources.
 
 ```js
 const routes = {
