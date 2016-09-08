@@ -4,6 +4,7 @@ import assert from 'assert'
 import XSAdapter from '@cycle/xstream-adapter'
 import xs from 'xstream'
 import {makeRouterDriver, createServerHistory} from '../lib'
+import switchPath from 'switch-path';
 
 describe('Cyclic Router - XStream', () => {
   describe('makeRouterDriver', () => {
@@ -19,7 +20,7 @@ describe('Cyclic Router - XStream', () => {
         '`createHref` and `dispose`',
         () => {
           const history = createServerHistory()
-          const router = makeRouterDriver(history)(xs.of('/'), XSAdapter)
+          const router = makeRouterDriver(history, switchPath)(xs.of('/'), XSAdapter)
           assert.notStrictEqual(router.path, null)
           assert.strictEqual(typeof router.path, 'function')
           assert.notStrictEqual(router.define, null)
@@ -38,7 +39,7 @@ describe('Cyclic Router - XStream', () => {
       '`createHref` and `dispose`',
       () => {
         const history = createServerHistory()
-        const router = makeRouterDriver(history)(xs.of('/'), XSAdapter)
+        const router = makeRouterDriver(history, switchPath)(xs.of('/'), XSAdapter)
           .path('/')
         assert.notStrictEqual(router.path, null)
         assert.strictEqual(typeof router.path, 'function')
@@ -57,7 +58,7 @@ describe('Cyclic Router - XStream', () => {
         '/path/that/is/correct',
       ]
       const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.fromArray(routes), XSAdapter)
         .path('/path')
 
       router.history$.addListener({
@@ -78,7 +79,7 @@ describe('Cyclic Router - XStream', () => {
       ]
 
       const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.fromArray(routes), XSAdapter)
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
 
@@ -100,7 +101,7 @@ describe('Cyclic Router - XStream', () => {
       ]
 
       const history = createServerHistory()
-      const router = makeRouterDriver(history)(xs.fromArray(routes), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.fromArray(routes), XSAdapter)
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
 
@@ -123,7 +124,7 @@ describe('Cyclic Router - XStream', () => {
       '`createHref` and `dispose`',
       () => {
         const history = createServerHistory()
-        const router = makeRouterDriver(history)(xs.merge(xs.never(), xs.of('/')), XSAdapter)
+        const router = makeRouterDriver(history, switchPath)(xs.merge(xs.never(), xs.of('/')), XSAdapter)
           .define({})
         assert.strictEqual(router instanceof xs, true)
         assert.strictEqual(typeof router.addListener, 'function')
@@ -139,7 +140,7 @@ describe('Cyclic Router - XStream', () => {
       }
 
       const history = createServerHistory('/some/route')
-      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.never(), XSAdapter)
       const match$ = router.define(defintion)
 
       match$.addListener({
@@ -166,7 +167,7 @@ describe('Cyclic Router - XStream', () => {
       ]
 
       const history = createServerHistory('/wrong/path')
-      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.never(), XSAdapter)
       const match$ = router.path('/some').path('/nested').define(defintion)
 
       match$.addListener({
@@ -194,7 +195,7 @@ describe('Cyclic Router - XStream', () => {
       }
 
       const history = createServerHistory('/wrong/path')
-      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.never(), XSAdapter)
       const match$ = router.path('/some').path('/nested').define(definition)
 
       match$.addListener({
@@ -221,7 +222,7 @@ describe('Cyclic Router - XStream', () => {
       }
 
       const history = createServerHistory('/wrong/path')
-      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.never(), XSAdapter)
       const match$ = router.path('/some').path('/nested').define(definition)
 
       match$.addListener({
@@ -251,7 +252,7 @@ describe('Cyclic Router - XStream', () => {
       }
 
       const history = createServerHistory('/wrong/path')
-      const router = makeRouterDriver(history)(xs.never(), XSAdapter)
+      const router = makeRouterDriver(history, switchPath)(xs.never(), XSAdapter)
       const match$ = router
           .path('/some').path('/nested').define(defintion)
 
