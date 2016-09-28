@@ -1,3 +1,12 @@
+# v3.0.1 (2016-09-28)
+
+
+## Bug Fixes
+
+- **typings:** update typings to use RouteDefinitionsMap and RouteMatcherReturn (#141)
+  ([08f9db47](https://github.com/git+https://github.com/TylorS/cyclic-router.git/commits/08f9db47c2c69afd90e4e366e428ad892e8fe258))
+
+
 # v2.1.2 (2016-07-02)
 
 
