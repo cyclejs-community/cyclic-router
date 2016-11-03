@@ -41,7 +41,7 @@
     "tslint": "^3.10.2",
     "typescript": "^2.0.7",
     "typings": "^0.8.1",
-    "uglify-js": "^2.7.1",
+    "uglify-js": "^2.7.4",
     "validate-commit-message": "^3.0.1",
     "xstream": "^7.0.0",
     "switch-path": "^1.1.8"
