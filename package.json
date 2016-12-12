@@ -43,7 +43,7 @@
     "typings": "^0.8.1",
     "uglify-js": "^2.7.1",
     "validate-commit-message": "^3.0.1",
-    "xstream": "^7.0.0",
+    "xstream": "^10.0.0",
     "switch-path": "^1.1.8"
   },
   "config": {
