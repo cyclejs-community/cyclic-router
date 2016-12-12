@@ -44,7 +44,7 @@
     "uglify-js": "^2.7.1",
     "validate-commit-message": "^3.0.1",
     "xstream": "^7.0.0",
-    "switch-path": "^1.1.8"
+    "switch-path": "^1.2.0"
   },
   "config": {
     "ghooks": {
