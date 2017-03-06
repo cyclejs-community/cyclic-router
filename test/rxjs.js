@@ -1,9 +1,9 @@
 /* eslint max-nested-callbacks: 0 */
 /*global describe, it */
 import assert from 'assert'
-import RxAdapter from '@cycle/rxjs-adapter'
 import {Observable} from 'rxjs'
-import {makeRouterDriver, createServerHistory} from '../lib'
+import {makeRouterDriver} from '../lib'
+import {createMemoryHistory} from 'history'
 import switchPath from 'switch-path';
 
 describe('Cyclic Router - Rx 5', () => {
@@ -19,8 +19,8 @@ describe('Cyclic Router - Rx 5', () => {
       it('should return an object with `path` `define` `observable` ' +
         '`createHref` and `dispose`',
         () => {
-          const history = createServerHistory('/')
-          const router = makeRouterDriver(history, switchPath)(Observable.of('/'), RxAdapter)
+          const history = createMemoryHistory('/')
+          const router = makeRouterDriver(history, switchPath)(Observable.of('/'))
           assert.notStrictEqual(router.path, null)
           assert.strictEqual(typeof router.path, 'function')
           assert.notStrictEqual(router.define, null)
@@ -38,8 +38,8 @@ describe('Cyclic Router - Rx 5', () => {
     it('should return an object with `path` `define` `observable` ' +
       '`createHref` and `dispose`',
       () => {
-        const history = createServerHistory('/')
-        const router = makeRouterDriver(history, switchPath)(Observable.of('/'), RxAdapter)
+        const history = createMemoryHistory('/')
+        const router = makeRouterDriver(history, switchPath)(Observable.of('/'))
           .path('/')
         assert.notStrictEqual(router.path, null)
         assert.strictEqual(typeof router.path, 'function')
@@ -57,8 +57,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/somewhere/else',
         '/path/that/is/correct',
       ]
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
         .path('/path')
 
       router.history$.subscribe((location) => {
@@ -76,8 +76,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
 
@@ -96,8 +96,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/really/really/deeply/nested/incorrect/route',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
         .path('/some').path('/really').path('/really').path('/deeply')
         .path('/nested').path('/route').path('/that')
 
@@ -117,8 +117,8 @@ describe('Cyclic Router - Rx 5', () => {
     it('should return an object with `path$` `value$` `fullPath$` ' +
       '`createHref` and `dispose`',
       () => {
-        const history = createServerHistory('/')
-        const router = makeRouterDriver(history, switchPath)(Observable.of('/'), RxAdapter)
+        const history = createMemoryHistory('/')
+        const router = makeRouterDriver(history, switchPath)(Observable.of('/'))
           .define({})
         assert.strictEqual(router instanceof Observable, true)
         assert.strictEqual(typeof router.subscribe, 'function')
@@ -137,8 +137,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/route',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
       const match$ = router.define(defintion)
 
       match$.skip(1).subscribe(({path, value, location}) => {
@@ -162,8 +162,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/correct/route',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
       const match$ = router.path('/some').path('/nested').define(defintion)
 
       match$.subscribe(({path, value, location}) => {
@@ -190,8 +190,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/incorrect/route',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
       const match$ = router.path('/some').path('/nested').define(definition)
 
       match$.subscribe(({path, value, location}) => {
@@ -217,8 +217,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/correct/route',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
       const match$ = router
           .path('/some').path('/nested').define(defintion)
 
@@ -244,8 +244,8 @@ describe('Cyclic Router - Rx 5', () => {
         '/some/nested/correct/route/partial',
       ]
 
-      const history = createServerHistory('/')
-      const router = makeRouterDriver(history, switchPath)(Observable.never(), RxAdapter)
+      const history = createMemoryHistory('/')
+      const router = makeRouterDriver(history, switchPath)(Observable.never())
       const match$ = router
           .path('/some').path('/nested').define(defintion)
 

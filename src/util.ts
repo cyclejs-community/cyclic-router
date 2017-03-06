@@ -1,4 +1,5 @@
-import {Pathname} from '@cycle/history/lib/interfaces';
+import { createLocation } from 'history';
+import { LocationDescriptorObject, Pathname } from '@types/history';
 
 function splitPath(path: Pathname): Pathname[] {
   return path.split('/').filter(p => p.length > 0);
@@ -13,7 +14,7 @@ const startsWith = (param: string, value: string) => param[0] === value;
 const startsWith2 = (param: string, value1: string, value2: string) =>
   param[0] === value1 && param[1] === value2;
 
-function makeCreateHref(namespace: Pathname[], _createHref: (pathname: Pathname) => Pathname) {
+function makeCreateHref(namespace: Pathname[], _createHref: (location: LocationDescriptorObject) => Pathname) {
   /**
    * Function used to create HREFs that are properly namespaced
    * @typedef {createHref}
@@ -27,8 +28,8 @@ function makeCreateHref(namespace: Pathname[], _createHref: (pathname: Pathname)
   return function createHref(path: Pathname): Pathname {
     const fullPath = `${namespace.join('/')}${path}`;
     return startsWith(fullPath, '/') || startsWith2(fullPath, '#', '/')
-      ? _createHref(fullPath)
-      : _createHref('/' + fullPath);
+      ? _createHref(createLocation(fullPath))
+      : _createHref(createLocation('/' + fullPath));
   };
 }
 
