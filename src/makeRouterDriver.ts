@@ -1,8 +1,13 @@
-import {StreamAdapter} from '@cycle/base';
-import {makeHistoryDriver} from '@cycle/history';
-import {History, HistoryDriverOptions} from '@cycle/history/lib/interfaces';
-import {RouteMatcher} from './interfaces';
-import {RouterSource} from './RouterSource';
+import { adapt } from '@cycle/run/lib/adapt';
+import { HistoryDriver, makeHistoryDriver, makeServerHistoryDriver } from '@cycle/history';
+import { History, MemoryHistory } from '@types/history';
+import { BrowserHistoryBuildOptions } from 'history';
+import { RouteMatcher } from './interfaces';
+import { RouterSource } from './RouterSource';
+
+function isMemoryHistory(history: History): history is MemoryHistory {
+  return (<MemoryHistory>history).index !== undefined;
+}
 
 /**
  * Instantiates an new router driver function using the same arguments required
@@ -11,8 +16,15 @@ import {RouterSource} from './RouterSource';
  * @method makeRouterDriver
  * @return {routerDriver} The router driver function
  */
-function makeRouterDriver(history: History, routeMatcher: RouteMatcher, options?: HistoryDriverOptions) {
-  const historyDriver = makeHistoryDriver(history, options);
+function makeRouterDriver(history: History, routeMatcher: RouteMatcher, options?: BrowserHistoryBuildOptions) {
+  let historyDriver: HistoryDriver;
+
+  if (isMemoryHistory(history)) {
+    historyDriver = makeServerHistoryDriver(options);
+  } else {
+    historyDriver = makeHistoryDriver(options);
+  }
+
   /**
    * The actual router driver.
    * @public
@@ -23,10 +35,10 @@ function makeRouterDriver(history: History, routeMatcher: RouteMatcher, options?
    * history driver would expect.
    * @return {routerAPI}
    */
-  return function routerDriver(sink$: any, runSA: StreamAdapter) {
-    const history$ = runSA.remember(historyDriver(sink$, runSA));
-    return new RouterSource(history$, [], history.createHref, runSA, routeMatcher);
+  return function routerDriver(sink$: any) {
+    const history$ = adapt(historyDriver(sink$));
+    return new RouterSource(history$, [], history.createHref, routeMatcher);
   };
 }
 
-export {makeRouterDriver}
+export { makeRouterDriver }
