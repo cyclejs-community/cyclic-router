@@ -9,14 +9,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TylorS/cyclic-router.git"
+    "url": "git+https://github.com/cyclejs-community/cyclic-router.git"
   },
-  "author": "Tylor Steinberger",
+  "contributors": [
+    {
+      "name": "Tylor Steinberger",
+      "email": "tlsteinberger167@gmail.com"
+    },
+    {
+      "name": "Nikhil Tilwalli",
+      "email": "ntilwalli@gmail.com"
+    }
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/TylorS/cyclic-router/issues"
+    "url": "https://github.com/cyclejs-community/cyclic-router/issues"
   },
-  "homepage": "https://github.com/TylorS/cyclic-router#readme",
+  "homepage": "https://github.com/cyclejs-community/cyclic-router#readme",
   "dependencies": {
     "@cycle/history": "^6.1.0",
     "@types/history": "^4.5.0",
