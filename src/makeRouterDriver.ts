@@ -1,8 +1,7 @@
-import {StreamAdapter} from '@cycle/base';
 import {makeHistoryDriver} from '@cycle/history';
-import {History, HistoryDriverOptions} from '@cycle/history/lib/interfaces';
 import {RouteMatcher} from './interfaces';
 import {RouterSource} from './RouterSource';
+import {History} from '@types/history';
 
 /**
  * Instantiates an new router driver function using the same arguments required
@@ -11,8 +10,11 @@ import {RouterSource} from './RouterSource';
  * @method makeRouterDriver
  * @return {routerDriver} The router driver function
  */
-function makeRouterDriver(history: History, routeMatcher: RouteMatcher, options?: HistoryDriverOptions) {
-  const historyDriver = makeHistoryDriver(history, options);
+function makeRouterDriver(history: History, routeMatcher: RouteMatcher) {
+  if (!history) {
+    throw new Error('Cyclic router must be given a history object');
+  }
+  const historyDriver = makeHistoryDriver(history);
   /**
    * The actual router driver.
    * @public
@@ -23,9 +25,9 @@ function makeRouterDriver(history: History, routeMatcher: RouteMatcher, options?
    * history driver would expect.
    * @return {routerAPI}
    */
-  return function routerDriver(sink$: any, runSA: StreamAdapter) {
-    const history$ = runSA.remember(historyDriver(sink$, runSA));
-    return new RouterSource(history$, [], history.createHref, runSA, routeMatcher);
+  return function routerDriver(sink$: any) {
+    const history$ = historyDriver(sink$).remember();
+    return new RouterSource(history$, [], history.createHref, routeMatcher);
   };
 }
 

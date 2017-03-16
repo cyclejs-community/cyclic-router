@@ -1,7 +1,7 @@
 # cyclic-router
 cyclic-router is a Router Driver built for Cycle.js
 
-**Disclaimer** v2.x.x and v3 are for Cycle Diversity!
+**Disclaimer** Use v4 for Cycle Unified. v2.x.x is for Cycle and v3 is for Cycle Diversity.  
 If you are still using @cycle/core please continue to use v1.x.x
 
 ## Installation
@@ -10,7 +10,7 @@ Using [npm](https://www.npmjs.com/):
 
     $ npm install --save cyclic-router
 
-Version 3 requires users to inject the route matcher.  We'll use `switch-path` for our examples but other
+Versions 3 and 4 requires users to inject the route matcher.  We'll use `switch-path` for our examples but other
 matching libraries could be adapted to be used here:
 
     $ npm install --save switch-path
