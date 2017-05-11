@@ -38,7 +38,7 @@ import xs from 'xstream';
 import Cycle from '@cycle/xstream-run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeRouterDriver} from 'cyclic-router';
-import {createHistory} from 'history';
+import {createBrowserHistory} from 'history';
 import switchPath from 'switch-path';  // Required in v3, not required in v2 or below 
 
 function main(sources) {
@@ -61,7 +61,7 @@ function main(sources) {
 
 Cycle.run(main, {
   DOM: makeDOMDriver('#app'),
-  router: makeRouterDriver(createHistory(), switchPath)  // v3
+  router: makeRouterDriver(createBrowserHistory(), switchPath)  // v3
   // router: makeRouterDriver(createHistory()) // <= v2
 });
 ```
