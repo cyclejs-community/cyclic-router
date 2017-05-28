@@ -13,4 +13,4 @@ export interface RouteMatcherReturn {
 
 export interface RouteMatcher {
   (path: string, routes: RouteDefinitionsMap | RouteDefinitionsArray): RouteMatcherReturn;
-} 
+}

@@ -1,5 +1,5 @@
 import {Observable} from 'rx';
-import {Pathname, Location} from '@cycle/history/lib/interfaces';
+import {Pathname, Location} from '@cycle/history';
 import {RouteDefinitionsMap, RouteMatcherReturn} from './lib/interfaces';
 export interface RouterSource {
     history$: Observable<Location>;
