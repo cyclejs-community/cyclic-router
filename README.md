@@ -71,7 +71,7 @@ Cycle.run(main, {
 This behavior changes based on the injected route matcher.  In the case of `switch-path`, you can pass route parameters to your component by adding them to the component sources.
 
 ```js
-const routes = {
+const match$ = {
   '/:id': id => sources => YourComponent({props$: Observable.of({id}), ...sources})
 }
 ```
