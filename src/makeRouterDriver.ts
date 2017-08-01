@@ -1,7 +1,7 @@
 import {makeHistoryDriver} from '@cycle/history';
 import {RouteMatcher} from './interfaces';
 import {RouterSource} from './RouterSource';
-import {History} from '@types/history';
+import {History} from 'history';
 
 /**
  * Instantiates an new router driver function using the same arguments required
