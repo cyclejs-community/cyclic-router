@@ -2,6 +2,11 @@ import {makeHistoryDriver} from '@cycle/history';
 import {RouteMatcher} from './interfaces';
 import {RouterSource} from './RouterSource';
 import {History} from 'history';
+import {HistoryInput,  GenericInput} from '@cycle/history';
+import {Stream} from 'xstream';
+
+export declare type HistoryAction = HistoryInput | GenericInput | string;
+export declare type RouterSink = Stream<HistoryAction>;
 
 /**
  * Instantiates an new router driver function using the same arguments required
@@ -25,7 +30,7 @@ function makeRouterDriver(history: History, routeMatcher: RouteMatcher) {
    * history driver would expect.
    * @return {routerAPI}
    */
-  return function routerDriver(sink$: any) {
+  return function routerDriver(sink$: RouterSink) {
     const history$ = historyDriver(sink$).remember();
     return new RouterSource(history$, [], history.createHref, routeMatcher);
   };
