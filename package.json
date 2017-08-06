@@ -56,7 +56,7 @@
   },
   "config": {
     "ghooks": {
-      "commit-msg": "node ./node_modules/.bin/validate-commit-msg"
+      "commit-msg": "validate-commit-msg $2"
     }
   },
   "scripts": {
