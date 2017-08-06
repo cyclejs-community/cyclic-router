@@ -1,29 +1,45 @@
 /* eslint max-nested-callbacks: 0 */
 /*global describe, it */
 import assert from 'assert'
-import {run} from '@cycle/rxjs-run'
-import {setAdapt} from '@cycle/run/lib/adapt'
+import {setAdapt, adapt} from '@cycle/run/lib/adapt'
 import {Observable} from 'rxjs'
-import {makeRouterDriver} from '../lib'
-import {createMemoryHistory, MemoryHistoryBuildOptions} from 'history'
+import {routerify} from '../lib'
+import {makeServerHistoryDriver} from '@cycle/history'
 import switchPath from 'switch-path'
 
-describe('Cyclic Router - Rx 5', () => {
-  before(() => setAdapt(stream => Observable.from(stream)));
-  describe('makeRouterDriver', () => {
-    it('should throw if not given a history instance', () => {
-      assert.throws(() => {
-        makeRouterDriver(null)
-      }, Error,
-      /First argument to makeRouterDriver must be a valid history driver/i)
+describe('Cyclic Router - RxJS 5', () => {
+  before(() => setAdapt(stream => Observable.from(stream)))
+  describe('routerify', () => {
+    it('should throw if not given a main function', () => {
+      assert.throws(
+        () => {
+          makeRouterDriver(null)
+        },
+        Error,
+        /First argument to routerify must be a valid cycle app/i
+      )
     })
 
-    describe('routerDriver', () => {
-      it('should return an object with `path` `define` `observable` ' +
+    it('should return a function returning sinks', () => {
+      const app = () => ({router: Observable.never()})
+      const augmentedApp = routerify(app, switchPath)
+      const sinks = augmentedApp({history: Observable.never()})
+      assert.notStrictEqual(augmentedApp, null)
+      assert.strictEqual(typeof augmentedApp, 'function')
+      assert.notStrictEqual(sinks, null)
+      assert.strictEqual(typeof sinks, 'object')
+      assert.notStrictEqual(sinks.history, null)
+      assert.strictEqual(typeof sinks.history, 'object')
+      assert.strictEqual(typeof sinks.history.subscribe, 'function')
+    })
+  })
+
+  describe('path()', () => {
+    it(
+      'should return an object with `path` `define` `observable` ' +
         '`createHref` and `dispose`',
-        () => {
-          const history = createMemoryHistory()
-          const router = makeRouterDriver(history, switchPath)(Observable.of('/'))
+      () => {
+        const app = ({router}) => {
           assert.notStrictEqual(router.path, null)
           assert.strictEqual(typeof router.path, 'function')
           assert.notStrictEqual(router.define, null)
@@ -33,231 +49,243 @@ describe('Cyclic Router - Rx 5', () => {
           assert.strictEqual(typeof router.history$.subscribe, 'function')
           assert.notStrictEqual(router.createHref, null)
           assert.strictEqual(typeof router.createHref, 'function')
-        })
-    })
-  })
-
-  describe('path()', () => {
-    it('should return an object with `path` `define` `observable` ' +
-      '`createHref`',
-      () => {
-        const history = createMemoryHistory()
-        const router = makeRouterDriver(history, switchPath)(Observable.of('/'))
-          .path('/')
-        assert.notStrictEqual(router.path, null)
-        assert.strictEqual(typeof router.path, 'function')
-        assert.notStrictEqual(router.define, null)
-        assert.strictEqual(typeof router.define, 'function')
-        assert.notStrictEqual(router.history$, null)
-        assert.strictEqual(typeof router.history$, 'object')
-        assert.strictEqual(typeof router.history$.subscribe, 'function')
-        assert.notStrictEqual(router.createHref, null)
-        assert.strictEqual(typeof router.createHref, 'function')
-      })
+          return {}
+        }
+        routerify(app, switchPath)({history: Observable.never()})
+      }
+    )
 
     it('should filter the history$', () => {
-      const routes = [
-        '/somewhere/else',
-        '/path/that/is/correct',
-      ]
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-        .path('/path')
+      const routes = ['/somewhere/else', '/path/that/is/correct']
 
-      router.history$.subscribe((location) => {
-        assert.notStrictEqual(location.pathname, '/somewhere/else')
-        assert.strictEqual(location.pathname, '/path/that/is/correct')
+      const app = sources => {
+        sources.router.path('/path').history$.subscribe(location => {
+          assert.notStrictEqual(location.pathname, '/somewhere/else')
+          assert.strictEqual(location.pathname, '/path/that/is/correct')
+        })
+        return {}
+      }
+      routerify(app, switchPath)({
+        history: adapt(makeServerHistoryDriver()(Observable.from(routes)))
       })
-
-      routes.forEach(r => history.push(r))
     })
 
     it('multiple path()s should filter the history$', () => {
       const routes = [
         '/the/wrong/path',
         '/some/really/really/deeply/nested/route/that/is/correct',
-        '/some/really/really/deeply/nested/incorrect/route',
+        '/some/really/really/deeply/nested/incorrect/route'
       ]
 
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-        .path('/some').path('/really').path('/really').path('/deeply')
-        .path('/nested').path('/route').path('/that')
-
-      router.history$.subscribe(({pathname}) => {
-        assert.strictEqual(pathname,
-          '/some/really/really/deeply/nested/route/that/is/correct')
+      const app = sources => {
+        sources.router
+          .path('/some')
+          .path('/really')
+          .path('/really')
+          .path('/deeply')
+          .path('/nested')
+          .path('/route')
+          .path('/that')
+          .history$.subscribe(({pathname}) => {
+            assert.strictEqual(
+              pathname,
+              '/some/really/really/deeply/nested/route/that/is/correct'
+            )
+          })
+        return {}
+      }
+      routerify(app, switchPath)({
+        history: adapt(makeServerHistoryDriver()(Observable.from(routes)))
       })
-
-      routes.forEach(r => history.push(r))
     })
 
     it('should create a proper path using createHref()', () => {
       const routes = [
         '/the/wrong/path',
         '/some/really/really/deeply/nested/route/that/is/correct',
-        '/some/really/really/deeply/nested/incorrect/route',
+        '/some/really/really/deeply/nested/incorrect/route'
       ]
 
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-        .path('/some').path('/really').path('/really').path('/deeply')
-        .path('/nested').path('/route').path('/that')
-
-
-      router.history$.subscribe(({pathname}) => {
-        assert.strictEqual(pathname,
-          '/some/really/really/deeply/nested/route/that/is/correct')
-        // assert.strictEqual(
-        //   router.createHref('/is/correct'),
-        //   '/some/really/really/deeply/nested/route/that/is/correct')
+      const app = sources => {
+        sources.router
+          .path('/some')
+          .path('/really')
+          .path('/really')
+          .path('/deeply')
+          .path('/nested')
+          .path('/route')
+          .path('/that')
+          .history$.subscribe(({pathname}) => {
+            assert.strictEqual(
+              pathname,
+              '/some/really/really/deeply/nested/route/that/is/correct'
+            )
+            assert.strictEqual(
+              router.createHref('/is/correct'),
+              '/some/really/really/deeply/nested/route/that/is/correct'
+            )
+          })
+        return {}
+      }
+      routerify(app, switchPath)({
+        history: adapt(makeServerHistoryDriver()(Observable.from(routes)))
       })
-      routes.forEach(r => history.push(r))
-
     })
   })
 
   describe('define()', () => {
-    it('should return an object that is an Observable with createHref',
+    it(
+      'should return an object with `path$` `value$` `fullPath$` ' +
+        '`createHref` and `dispose`',
       () => {
-        const history = createMemoryHistory()
-        const router = makeRouterDriver(history, switchPath)(Observable.of('/'))
-          .define({})
-        assert.strictEqual(router instanceof Observable, true)
-        assert.strictEqual(typeof router.subscribe, 'function')
-        assert.notStrictEqual(router.createHref, null)
-        assert.strictEqual(typeof router.createHref, 'function')
-      })
+        const app = sources => {
+          const router = sources.router.define({})
+          assert.strictEqual(router instanceof Observable, true)
+          assert.strictEqual(typeof router.subscribe, 'function')
+          assert.notStrictEqual(router.createHref, null)
+          assert.strictEqual(typeof router.createHref, 'function')
+          return {}
+        }
+        routerify(app, switchPath)({history: Observable.never()})
+      }
+    )
 
     it('should match routes against a definition object', done => {
       const defintion = {
         '/some': {
-          '/route': 123,
-        },
+          '/route': 123
+        }
       }
 
-      const routes = [
-        '/some/route',
-      ]
-
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-      const match$ = router.define(defintion)
-
-      match$.skip(1).subscribe(({path, value, location}) => {
-        assert.strictEqual(path, '/some/route')
-        assert.strictEqual(value, 123)
-        assert.strictEqual(location.pathname, '/some/route')
-        done()
+      const app = ({router}) => {
+        const match$ = router.define(defintion)
+        match$.subscribe(({path, value, location}) => {
+          assert.strictEqual(path, '/some/route')
+          assert.strictEqual(value, 123)
+          assert.strictEqual(location.pathname, '/some/route')
+          done()
+        })
+        return {}
+      }
+      routerify(app, switchPath)({
+        history: adapt(makeServerHistoryDriver()(Observable.of('/some/route')))
       })
-      routes.forEach(r => history.push(r))
     })
 
     it('should respect prior filtering by path()', done => {
       const defintion = {
         '/correct': {
-          '/route': 123,
-        },
+          '/route': 123
+        }
       }
 
-      const routes = [
-        '/wrong/path',
-        '/some/nested/correct/route',
-      ]
+      const routes = ['/some/nested/correct/route']
 
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-      const match$ = router.path('/some').path('/nested').define(defintion)
-
-      match$.subscribe(({path, value, location}) => {
-        assert.strictEqual(path, '/correct/route')
-        assert.strictEqual(value, 123)
-        assert.strictEqual(location.pathname, '/some/nested/correct/route')
-        done()
+      const app = ({router}) => {
+        const match$ = router.path('/some').path('/nested').define(defintion)
+        match$.subscribe(({path, value, location}) => {
+          assert.strictEqual(path, '/correct/route')
+          assert.strictEqual(value, 123)
+          assert.strictEqual(location.pathname, '/some/nested/correct/route')
+          done()
+        })
+        return {}
+      }
+      routerify(app, switchPath)({
+        history: adapt(
+          makeServerHistoryDriver()(
+            Observable.of('/wrong/path', '/some/nested/correct/route').delay(0)
+          )
+        )
       })
-      routes.forEach(r => history.push(r))
-
     })
 
     it('should match a default route if one is not found', done => {
       const definition = {
         '/correct': {
-          '/route': 123,
+          '/route': 123
         },
-        '*': 999,
+        '*': 999
       }
 
-      const routes = [
-        '/wrong/path',
-        '/wrong/route',
-        '/some/nested/incorrect/route',
-      ]
-
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-      const match$ = router.path('/some').path('/nested').define(definition)
-
-      match$.subscribe(({path, value, location}) => {
-        assert.strictEqual(path, '/incorrect/route')
-        assert.strictEqual(value, 999)
-        assert.strictEqual(location.pathname, '/some/nested/incorrect/route')
-        done()
+      const app = ({router}) => {
+        const match$ = router.path('/some').path('/nested').define(definition)
+        match$.subscribe(({path, value, location}) => {
+          assert.strictEqual(path, '/incorrect/route')
+          assert.strictEqual(value, 999)
+          assert.strictEqual(location.pathname, '/some/nested/incorrect/route')
+          done()
+        })
+        return {router: Observable.of('/wrong/path')}
+      }
+      routerify(app, switchPath)({
+        history: adapt(
+          makeServerHistoryDriver()(
+            Observable.of('/wrong/route', '/some/nested/incorrect/route').delay(
+              0
+            )
+          )
+        )
       })
-      routes.forEach(r => history.push(r))
-
     })
 
     it('should create a proper href using createHref()', done => {
-      const defintion = {
+      const definition = {
         '/correct': {
-          '/route': 123,
+          '/route': 123
         },
-        '*': 999,
+        '*': 999
       }
 
-      const routes = [
-        '/wrong/path',
-        '/some/nested/correct/route',
-      ]
+      const app = ({router}) => {
+        const match$ = router.path('/some').path('/nested').define(definition)
 
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-      const match$ = router
-          .path('/some').path('/nested').define(defintion)
-
-      match$.subscribe(({location: {pathname}, createHref}) => {
-        assert.strictEqual(pathname, '/some/nested/correct/route')
-        assert.strictEqual(createHref('/correct/route'), pathname)
-        done()
+        assert(match$.createHref('/hello'), '/some/nested/hello')
+        match$.subscribe(({path, value, location, createHref}) => {
+          assert.strictEqual(path, '/incorrect/route')
+          assert.strictEqual(value, 999)
+          assert.strictEqual(location.pathname, '/some/nested/incorrect/route')
+          //assert.strictEqual(location.pathname, createHref('/incorrect/route'))
+          done()
+        })
+        return {router: Observable.of('/wrong/path')}
+      }
+      routerify(app, switchPath)({
+        history: adapt(
+          makeServerHistoryDriver()(
+            Observable.of('/wrong/route', '/some/nested/incorrect/route').delay(
+              0
+            )
+          )
+        )
       })
-      routes.forEach(r => history.push(r))
-
     })
 
     it('should match partials', done => {
       const defintion = {
         '/correct': {
-          '/route': 123,
+          '/route': 123
         },
-        '*': 999,
+        '*': 999
       }
 
-      const routes = [
-        '/wrong/path',
-        '/some/nested/correct/route/partial',
-      ]
+      const app = ({router}) => {
+        const match$ = router.path('/some').path('/nested').define(defintion)
+        match$.subscribe(({path, location: {pathname}, createHref}) => {
+          assert.strictEqual(path, '/correct/route')
+          assert.strictEqual(pathname, '/some/nested/correct/route/partial')
+          done()
+        })
 
-      const history = createMemoryHistory()
-      const router = makeRouterDriver(history, switchPath)(Observable.never())
-      const match$ = router
-          .path('/some').path('/nested').define(defintion)
-
-      match$.subscribe(({path, location: {pathname}}) => {
-        assert.strictEqual(path, '/correct/route')
-        assert.strictEqual(pathname, '/some/nested/correct/route/partial')
-        done()
+        return {router: Observable.of('/wrong/path')}
+      }
+      routerify(app, switchPath)({
+        history: adapt(
+          makeServerHistoryDriver()(
+            Observable.of('/some/nested/correct/route/partial').delay(0)
+          )
+        )
       })
-      routes.forEach(r => history.push(r))
     })
   })
 })

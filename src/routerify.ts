@@ -21,7 +21,7 @@ function routerify(main: (a: any) => any, routeMatcher: RouteMatcher, basename =
     }
     const createHref = (location: Location) => basename + createPath(location);
     return function(sources: any): any {
-        const routerSource = new RouterSource(sources[historyName], [], createHref, routeMatcher);
+        const routerSource = new RouterSource(xs.from(sources[historyName]), [], createHref, routeMatcher);
         const sinks = main({ ...sources, [routerName]: routerSource });
         return {
             ...sinks,
