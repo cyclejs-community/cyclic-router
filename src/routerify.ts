@@ -16,6 +16,9 @@ export declare type RouterSink = Stream<HistoryAction>;
  * @return {main} The augmented main function
  */
 function routerify(main: (a: any) => any, routeMatcher: RouteMatcher, basename = '/', historyName = 'history', routerName = 'router') {
+    if (typeof main !== 'function') {
+        throw new Error('First argument to routerify must be a valid cycle app');
+    }
     const createHref = (location: Location) => basename + createPath(location);
     return function(sources: any): any {
         const routerSource = new RouterSource(sources[historyName], [], createHref, routeMatcher);
@@ -23,8 +26,8 @@ function routerify(main: (a: any) => any, routeMatcher: RouteMatcher, basename =
         return {
             ...sinks,
             [historyName]: adapt(xs.merge(
-                xs.fromObservable(sinks[historyName]),
-                xs.fromObservable(sinks[routerName])
+                sinks[historyName] ? xs.fromObservable(sinks[historyName]) : xs.never(),
+                sinks[routerName] ? xs.fromObservable(sinks[routerName]) : xs.never()
             ))
         };
     };
