@@ -1,6 +1,45 @@
 # cyclic-router
 cyclic-router is a Router Driver built for Cycle.js
 
+## Version 5 Update
+
+Version 5 changes the API from a driver to a main wrapper.
+
+```ts
+import xs from 'xstream';
+import {run} from '@cycle/run';
+import {makeDOMDriver} from '@cycle/dom';
+import {makeHistoryDriver} from '@cycle/history';
+import {routerify} from 'cyclic-router';
+import switchPath from 'switch-path';
+
+function main(sources) {
+  const match$ = sources.router.define({
+    '/': HomeComponent,
+    '/other': OtherComponent
+  });
+  
+  const page$ = match$.map(({path, value}) => {
+    return value(Object.assign({}, sources, {
+      router: sources.router.path(path)
+    }));
+  });
+  
+  return {
+    DOM: page$.map(c => c.DOM).flatten(),
+    router: xs.of('/other'),
+  };
+}
+
+const app = routerify(main, switchPath);
+
+run(app, {
+  DOM: makeDOMDriver('#app'),
+  history: makeHistoryDriver()
+});
+
+```
+
 **Disclaimer** Use v4 for Cycle Unified. v2.x.x is for Cycle and v3 is for Cycle Diversity.  
 If you are still using @cycle/core please continue to use v1.x.x
 
@@ -35,7 +74,7 @@ For API documentation please visit this link [here](http://cyclejs-community.git
 
 ```js
 import xs from 'xstream';
-import Cycle from '@cycle/xstream-run';
+import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {makeRouterDriver} from 'cyclic-router';
 import {createBrowserHistory} from 'history';
@@ -59,7 +98,7 @@ function main(sources) {
   };
 }
 
-Cycle.run(main, {
+run(main, {
   DOM: makeDOMDriver('#app'),
   router: makeRouterDriver(createBrowserHistory(), switchPath)  // v3
   // router: makeRouterDriver(createHistory()) // <= v2
