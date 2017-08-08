@@ -1,3 +1,12 @@
+# v5.0.0 (2017-08-08)
+
+
+## Features
+
+- **routerify:** Add option to omit history source
+  ([4e42e6d1](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/4e42e6d1ac86c133ad88de3ee886212ac7a52e83))
+
+
 # v4.0.7 (2017-08-04)
 
 
