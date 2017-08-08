@@ -41,6 +41,7 @@ function routerify(
     };
     const createHref = (location: Location) =>
         opts.basename + createPath(location);
+
     return function(sources: any): any {
         const routerSource = new RouterSource(
             xs.from(sources[opts.historyName]),
@@ -48,12 +49,13 @@ function routerify(
             createHref,
             routeMatcher
         );
+        let srcs = sources;
+        if (opts.omitHistory) {
+            delete srcs[opts.historyName];
+        }
         const sinks = main({
-            ...sources,
-            [opts.routerName]: routerSource,
-            [opts.historyName]: opts.omitHistory
-                ? undefined
-                : sources[opts.historyName]
+            ...srcs,
+            [opts.routerName]: routerSource
         });
         return {
             ...sinks,
