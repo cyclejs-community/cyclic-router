@@ -1,6 +1,6 @@
 {
   "name": "cyclic-router",
-  "version": "4.0.7",
+  "version": "5.0.0",
   "description": "A router driver built for Cycle.js",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -26,12 +26,14 @@
     "url": "https://github.com/cyclejs-community/cyclic-router/issues"
   },
   "homepage": "https://github.com/cyclejs-community/cyclic-router#readme",
+  "peerDependencies": {
+    "@cycle/history": "*"
+  },
   "dependencies": {
-    "@cycle/history": "^6.3.0",
-    "@cycle/run": "^3.1.0",
-    "history": "^4.6.3"
+    "@cycle/run": "^3.1.0"
   },
   "devDependencies": {
+    "@cycle/history": "^6.3.0",
     "@cycle/rxjs-run": "^7.0.0",
     "@types/history": "^4.6.0",
     "@types/mocha": "^2.2.41",
@@ -45,6 +47,7 @@
     "husky": "^0.14.3",
     "mkdirp": "^0.5.1",
     "mocha": "^3.4.2",
+    "prettier": "^1.5.3",
     "rxjs": "^5.4.0",
     "switch-path": "^1.2.0",
     "testem": "^1.16.1",
@@ -57,9 +60,11 @@
   "config": {
     "ghooks": {
       "commit-msg": "validate-commit-msg $2"
+      "pre-commit": "npm run format"
     }
   },
   "scripts": {
+    "format": "prettier --tab-width 4 --single-quote --write '{src,test}/**/*.{js,ts,tsx}'",
     "lint": "tslint -c tslint.json src/*.ts src/**/*.ts",
     "test-node": "mocha -r babel-register test/index.js",
     "test-browser": "testem",
