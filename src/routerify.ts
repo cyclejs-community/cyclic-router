@@ -1,19 +1,19 @@
 import xs from 'xstream';
-import {adapt} from '@cycle/run/lib/adapt';
-import {RouteMatcher} from './interfaces';
-import {RouterSource} from './RouterSource';
-import {Location, createPath} from 'history';
-import {HistoryInput, GenericInput} from '@cycle/history';
-import {Stream} from 'xstream';
+import { adapt } from '@cycle/run/lib/adapt';
+import { RouteMatcher } from './interfaces';
+import { RouterSource } from './RouterSource';
+import { Location, createPath } from 'history';
+import { HistoryInput, GenericInput } from '@cycle/history';
+import { Stream } from 'xstream';
 
 export declare type HistoryAction = HistoryInput | GenericInput | string;
 export declare type RouterSink = Stream<HistoryAction>;
 
 export interface RouterOptions {
-  basename?: string;
-  historyName?: string;
-  routerName?: string;
-  omitHistory?: boolean;
+    basename?: string;
+    historyName?: string;
+    routerName?: string;
+    omitHistory?: boolean;
 }
 
 /**
@@ -23,50 +23,52 @@ export interface RouterOptions {
  * @return {main} The augmented main function
  */
 function routerify(
-  main: (a: any) => any,
-  routeMatcher: RouteMatcher,
-  options?: RouterOptions
+    main: (a: any) => any,
+    routeMatcher: RouteMatcher,
+    options?: RouterOptions
 ) {
-  if (typeof main !== 'function') {
-    throw new Error('First argument to routerify must be a valid cycle app');
-  }
-  const opts: RouterOptions = {
-    basename: '/',
-    historyName: 'history',
-    routerName: 'router',
-    omitHistory: true,
-    ...options
-  };
-  const createHref = (location: Location) =>
-    opts.basename + createPath(location);
-  return function(sources: any): any {
-    const routerSource = new RouterSource(
-      xs.from(sources[opts.historyName]),
-      [],
-      createHref,
-      routeMatcher
-    );
-    const sinks = main({
-      ...sources,
-      [opts.routerName]: routerSource,
-      [opts.historyName]: opts.omitHistory
-        ? undefined
-        : sources[opts.historyName]
-    });
-    return {
-      ...sinks,
-      [opts.historyName]: adapt(
-        xs.merge(
-          sinks[opts.historyName] && !opts.omitHistory
-            ? xs.fromObservable(sinks[opts.historyName])
-            : xs.never(),
-          sinks[opts.routerName]
-            ? xs.fromObservable(sinks[opts.routerName])
-            : xs.never()
-        )
-      )
+    if (typeof main !== 'function') {
+        throw new Error(
+            'First argument to routerify must be a valid cycle app'
+        );
+    }
+    const opts: RouterOptions = {
+        basename: '/',
+        historyName: 'history',
+        routerName: 'router',
+        omitHistory: true,
+        ...options
     };
-  };
+    const createHref = (location: Location) =>
+        opts.basename + createPath(location);
+    return function(sources: any): any {
+        const routerSource = new RouterSource(
+            xs.from(sources[opts.historyName]),
+            [],
+            createHref,
+            routeMatcher
+        );
+        const sinks = main({
+            ...sources,
+            [opts.routerName]: routerSource,
+            [opts.historyName]: opts.omitHistory
+                ? undefined
+                : sources[opts.historyName]
+        });
+        return {
+            ...sinks,
+            [opts.historyName]: adapt(
+                xs.merge(
+                    sinks[opts.historyName] && !opts.omitHistory
+                        ? xs.fromObservable(sinks[opts.historyName])
+                        : xs.never(),
+                    sinks[opts.routerName]
+                        ? xs.fromObservable(sinks[opts.routerName])
+                        : xs.never()
+                )
+            )
+        };
+    };
 }
 
-export {routerify};
+export { routerify };
