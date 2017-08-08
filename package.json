@@ -26,12 +26,14 @@
     "url": "https://github.com/cyclejs-community/cyclic-router/issues"
   },
   "homepage": "https://github.com/cyclejs-community/cyclic-router#readme",
+  "peerDependencies": {
+    "@cycle/history": "*"
+  },
   "dependencies": {
-    "@cycle/history": "^6.3.0",
-    "@cycle/run": "^3.1.0",
-    "history": "^4.6.3"
+    "@cycle/run": "^3.1.0"
   },
   "devDependencies": {
+    "@cycle/history": "^6.3.0",
     "@cycle/rxjs-run": "^7.0.0",
     "@types/history": "^4.6.0",
     "@types/mocha": "^2.2.41",
