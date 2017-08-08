@@ -45,6 +45,8 @@
     "browserify": "^14.4.0",
     "cli-release": "^1.0.4",
     "ghooks": "^1.2.1",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.0.3",
     "mkdirp": "^0.5.1",
     "mocha": "^3.4.2",
     "prettier": "^1.5.3",
@@ -57,13 +59,15 @@
     "validate-commit-message": "^3.0.1",
     "xstream": "^10.8.0"
   },
-  "config": {
-    "ghooks": {
-      "commit-msg": "node ./node_modules/.bin/validate-commit-msg",
-      "pre-commit": "npm run format"
-    }
+  "lint-staged": {
+    "{test,src}/**/*.{js,jsx,ts,tsx}": [
+      "npm run format",
+      "git add"
+    ]
   },
   "scripts": {
+    "precommit": "lint-staged",
+    "commitmsg": "validate-commit-msg $2",
     "format": "prettier --tab-width 4 --single-quote --write '{src,test}/**/*.{js,ts,tsx}'",
     "lint": "tslint -c tslint.json src/*.ts src/**/*.ts",
     "test-node": "mocha -r babel-register test/index.js",
