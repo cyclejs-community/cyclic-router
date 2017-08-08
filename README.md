@@ -1,7 +1,7 @@
 # cyclic-router
 cyclic-router V5 is a routing library built for Cycle.js.  Unlike previous versions, cyclic-router V5 is not a driver.  It is a `main` function-wrapper (routerify) which relies on @cycle/history for driver source/sink interactions
 
-For older versions of cyclic-router, V4 and earlier please go to the old [README](https://github.com/cyclejs-community/cyclic-router/README_V4.md)
+For older versions of cyclic-router, V4 and earlier please go to the old [README](https://github.com/cyclejs-community/cyclic-router/blob/master/README_V4.md)
 
 ## Installation
 
@@ -19,10 +19,6 @@ import {routerify} from 'cyclic-router'
 // not using an ES6 transpiler
 var routerify = require('cyclic-router').routerify
 ```
-
-## API
-
-For API documentation please visit this link [here](http://cyclejs-community.github.io/cyclic-router/docs/)
 
 ## Basic Usage
 
@@ -65,7 +61,7 @@ run(mainWithRouting, {
 ```
 ### Routerify Options
 
-Routerify accepts an options object like so: `routerify(main, options)`
+Routerify accepts an options object like so: `routerify(main, switchPath, options)`
 
 The `options` object conforms to the interface:
 ```
@@ -78,8 +74,8 @@ interface RouterOptions {
 ```
 
 - `basename` - The root router path, defaults to `/`
-- `historyName` - The source/sink name associated with the raw history river, defaults to `history`
-- `routerName` - The source/sink name you want exposed to your app which caputures the functionality/streams associated with routerify.  Defaults to `router`
+- `historyName` - The source/sink name associated with the raw history driver, defaults to `history`
+- `routerName` - The source/sink name you want exposed to your app which captures the functionality/streams associated with routerify.  Defaults to `router`
 - `omitHistory` - Routerify hides the source/sink name associated with the raw history driver (given in the `historyName` option) from your app and only exposes the source/sink name associated with the router (given in the `routerName` option).  Defaults to `true`, If you would like your app to have access to both the raw `history` source/sink and the `router` source/sink (injected by routerify), set this option to `false`
 
 ### Route Parameters
