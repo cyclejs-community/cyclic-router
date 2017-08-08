@@ -44,7 +44,7 @@
     "babelify": "^7.3.0",
     "browserify": "^14.4.0",
     "cli-release": "^1.0.4",
-    "ghooks": "^1.2.1",
+    "husky": "^0.14.3",
     "mkdirp": "^0.5.1",
     "mocha": "^3.4.2",
     "prettier": "^1.5.3",
@@ -59,7 +59,7 @@
   },
   "config": {
     "ghooks": {
-      "commit-msg": "node ./node_modules/.bin/validate-commit-msg",
+      "commit-msg": "validate-commit-msg $2"
       "pre-commit": "npm run format"
     }
   },
