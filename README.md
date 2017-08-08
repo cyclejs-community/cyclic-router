@@ -28,7 +28,7 @@ For API documentation please visit this link [here](http://cyclejs-community.git
 
 ```js
 import xs from 'xstream';
-import {run} from '@cycle/xstream-run';
+import {run} from '@cycle/run';
 import {makeDOMDriver} from '@cycle/dom';
 import {routerify} from 'cyclic-router';
 import {makeHistoryDriver} from '@cycle/history';
@@ -60,7 +60,7 @@ const mainWithRouting = routerify(main, switchPath)
 run(mainWithRouting, {
   DOM: makeDOMDriver('#app'),
   history: makeHistoryDriver() // create history driver as usual,
-                                     // but it gets proxied by routerify
+                               // but it gets proxied by routerify
 });
 ```
 ### Routerify Options
