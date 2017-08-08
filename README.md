@@ -1,5 +1,5 @@
 # cyclic-router
-cyclic-router V5 is a routing library built for Cycle.js.  Unlike previous versions, cyclic-router V5 is not a driver.  It is a `main` function-wrapper which relies on @cycle/history for driver source/sink interactions
+cyclic-router V5 is a routing library built for Cycle.js.  Unlike previous versions, cyclic-router V5 is not a driver.  It is a `main` function-wrapper (routerify) which relies on @cycle/history for driver source/sink interactions
 
 For older versions of cyclic-router, V4 and earlier please go to the old [README](https://github.com/cyclejs-community/cyclic-router/README_V4.md)
 
@@ -9,7 +9,7 @@ Using [npm](https://www.npmjs.com/):
 
     $ npm install --save cyclic-router
 
-Cyclic router requires you to inject the route matcher.  We'll use `switch-path` for our examples but other matching libraries could be adapted to be used here:
+Routerify requires you to inject the route matcher.  We'll use `switch-path` for our examples but other matching libraries could be adapted to be used here:
 
     $ npm install --save switch-path
 ```js
