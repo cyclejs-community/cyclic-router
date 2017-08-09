@@ -6,9 +6,8 @@
     "declaration": true,
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
-    "module": "commonjs",
-    "target": "ES5",
-    "outDir": "lib/"
+    "moduleResolution": "node",
+    "target": "ES5"
   },
   "formatCodeOptions": {
     "indentSize": 2,
