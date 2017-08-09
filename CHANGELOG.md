@@ -1,3 +1,12 @@
+# v5.1.0 (2017-08-09)
+
+
+## Bug Fixes
+
+- xstream operator
+  ([c8ab701b](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/c8ab701b6e5be0979a6369d849de15c6a79e19ed))
+
+
 # v5.0.1 (2017-08-09)
 
 
