@@ -1,5 +1,5 @@
 # cyclic-router
-cyclic-router V5 is a routing library built for Cycle.js.  Unlike previous versions, cyclic-router V5 is not a driver.  It is a `main` function-wrapper (routerify) which relies on @cycle/history for driver source/sink interactions
+cyclic-router V5 is a routing library built for Cycle.js.  Unlike previous versions, cyclic-router V5 is not a driver.  It is a `main` function-wrapper (routerify) which relies on @cycle/history for driver source/sink interactions.
 
 For older versions of cyclic-router, V4 and earlier please go to the old [README](https://github.com/cyclejs-community/cyclic-router/blob/master/README_V4.md)
 
@@ -7,6 +7,9 @@ For older versions of cyclic-router, V4 and earlier please go to the old [README
 
 Using [npm](https://www.npmjs.com/):
 
+    $ npm install --save @cycle/history # @cycle/history is a peerDependency of cyclic-router
+    $ npm install --saveDev @types/history # @cycle/history uses ReactTraining/history 
+                                           # under the hood (For Typescript users only)
     $ npm install --save cyclic-router
 
 Routerify requires you to inject the route matcher.  We'll use `switch-path` for our examples but other matching libraries could be adapted to be used here:
@@ -93,6 +96,9 @@ const routes = {
 You can dynamically change route from code by emitting inputs handled by [the history driver](http://cycle.js.org/history/docs/#historyDriver).
 
 ```js
+...
+import sampleCombine from 'xstream/extra/sampleCombine'
+
 function main(sources) {
   // ...
   const homePageClick$ = sources.DOM.select(".home").events("click");
@@ -100,6 +106,7 @@ function main(sources) {
   const nextPageClick$ = sources.DOM.select(".next").events("click");
   const oldPageClick$ = sources.DOM.select(".old").events("click");
   const aboutPageClick$ = sources.DOM.select(".about").events("click");
+  const replacePageClick$ = sources.DOM.select(".replace").events("click");
   
   return {
     // ...
@@ -118,6 +125,11 @@ function main(sources) {
         
         // Go to page "/about" with some state set to router's location
         aboutPageClick$.mapTo({ pathname: "/about", state: { some: "state" } })
+        
+        // Replace the current history entry with the same path, but with new state info
+        replacePageClick$.compose(sampleCombine(sources.router.history$)).map(([_, route]) => {
+          return { type: 'replace', pathname: route.pathname, state: { some: "different state" } }
+        ))
     ),
   };
 }
