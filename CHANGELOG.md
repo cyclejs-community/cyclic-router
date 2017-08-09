@@ -1,3 +1,12 @@
+# v5.0.1 (2017-08-09)
+
+
+## Features
+
+- Add husky and lint-staged (#204)
+  ([fcdecb66](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/fcdecb66f7d3aec0e82594e9e515d26029461b89))
+
+
 # v5.0.0 (2017-08-08)
 
 
