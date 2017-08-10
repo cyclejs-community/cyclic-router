@@ -8,7 +8,7 @@ For older versions of cyclic-router, V4 and earlier please go to the old [README
 Using [npm](https://www.npmjs.com/):
 
     $ npm install --save @cycle/history # @cycle/history is a peerDependency of cyclic-router
-    $ npm install --saveDev @types/history # @cycle/history uses ReactTraining/history 
+    $ npm install --save-dev @types/history # @cycle/history uses ReactTraining/history 
                                            # under the hood (For Typescript users only)
     $ npm install --save cyclic-router
 
