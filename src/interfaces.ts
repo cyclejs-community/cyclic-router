@@ -7,7 +7,7 @@ export interface RouteDefinitionsArray {
 }
 
 export interface RouteMatcherReturn {
-    path: string;
+    path: string | null;
     value: any;
 }
 
