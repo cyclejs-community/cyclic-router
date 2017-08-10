@@ -1,6 +1,6 @@
 {
   "name": "cyclic-router",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "A router driver built for Cycle.js",
   "main": "lib/index.js",
   "module": "lib/es6/index.js",
