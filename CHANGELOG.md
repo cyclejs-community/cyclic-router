@@ -1,3 +1,17 @@
+# v5.1.1 (2017-08-11)
+
+
+## Bug Fixes
+
+- **README:**
+    - typo
+    ([00941228](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/00941228df276676e5fdc78b5d6f44c4616a27b4))
+    - Add peer dependency instructions
+    ([6683aba7](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/6683aba70223029a9995f46449e264fc09bacace))
+- **types:** Relax RouteMatcherReturn
+  ([d1162b73](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/d1162b73d36f706cc6f91d0c880efa0a5d271de7))
+
+
 # v5.1.0 (2017-08-09)
 
 
