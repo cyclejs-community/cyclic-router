@@ -44,7 +44,7 @@ function routerify(
 
     return function(sources: any): any {
         const routerSource = new RouterSource(
-            xs.fromObservable(sources[opts.historyName]),
+            xs.fromObservable(sources[opts.historyName]).remember(),
             [],
             createHref,
             routeMatcher
