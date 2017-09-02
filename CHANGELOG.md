@@ -1,3 +1,12 @@
+# v5.1.3 (2017-09-02)
+
+
+## Bug Fixes
+
+- **routerfiy:** Convert back to MemoryStream on adapt boundary
+  ([1766963e](https://github.com/git+https://github.com/cyclejs-community/cyclic-router.git/commits/1766963e8a918b62799110a164bd71469c5b8d0c))
+
+
 # v5.1.2 (2017-08-11)
 
 
