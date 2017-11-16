@@ -1,6 +1,6 @@
 {
   "name": "cyclic-router",
-  "version": "5.1.3",
+  "version": "5.1.4",
   "description": "A router driver built for Cycle.js",
   "main": "lib/index.js",
   "module": "lib/es6/index.js",
@@ -35,11 +35,11 @@
     "@cycle/history": "*"
   },
   "dependencies": {
-    "@cycle/run": "^3.1.0"
+    "@cycle/run": "*"
   },
   "devDependencies": {
-    "@cycle/history": "^6.3.0",
-    "@cycle/rxjs-run": "^7.0.0",
+    "@cycle/history": "^6.8.0",
+    "@cycle/rxjs-run": "^8.0.0",
     "@types/history": "^4.6.0",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.19",
@@ -55,7 +55,7 @@
     "mkdirp": "^0.5.1",
     "mocha": "^3.4.2",
     "prettier": "^1.5.3",
-    "rxjs": "^5.4.0",
+    "rxjs": "^5.5.2",
     "switch-path": "^1.2.0",
     "testem": "^1.16.1",
     "tslint": "^3.10.2",
