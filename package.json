@@ -32,7 +32,8 @@
   },
   "homepage": "https://github.com/cyclejs-community/cyclic-router#readme",
   "peerDependencies": {
-    "@cycle/history": "*"
+    "@cycle/history": "*",
+    "history": "*"
   },
   "dependencies": {
     "@cycle/run": "*"
