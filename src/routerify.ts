@@ -47,7 +47,8 @@ function routerify(
             xs.fromObservable(sources[opts.historyName]).remember(),
             [],
             createHref,
-            routeMatcher
+            routeMatcher,
+            opts.routerName
         );
         let srcs = sources;
         if (opts.omitHistory) {
