@@ -1,14 +1,16 @@
 /* eslint max-nested-callbacks: 0 */
 /*global describe, it */
+import 'symbol-observable';
 import assert from 'assert';
 import { setAdapt, adapt } from '@cycle/run/lib/adapt';
-import { Observable } from 'rxjs';
+import { Observable, from, never, of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 import { routerify } from '../lib';
 import { makeServerHistoryDriver } from '@cycle/history';
 import switchPath from 'switch-path';
 
-describe('Cyclic Router - RxJS 5', () => {
-    before(() => setAdapt(stream => Observable.from(stream)));
+describe('Cyclic Router - RxJS 6', () => {
+    before(() => setAdapt(stream => from(stream)));
     describe('routerify', () => {
         it('should throw if not given a main function', () => {
             assert.throws(
@@ -21,9 +23,9 @@ describe('Cyclic Router - RxJS 5', () => {
         });
 
         it('should return a function returning sinks', () => {
-            const app = () => ({ router: Observable.never() });
+            const app = () => ({ router: never() });
             const augmentedApp = routerify(app, switchPath);
-            const sinks = augmentedApp({ history: Observable.never() });
+            const sinks = augmentedApp({ history: never() });
             assert.notStrictEqual(augmentedApp, null);
             assert.strictEqual(typeof augmentedApp, 'function');
             assert.notStrictEqual(sinks, null);
@@ -54,7 +56,7 @@ describe('Cyclic Router - RxJS 5', () => {
                     assert.strictEqual(typeof router.createHref, 'function');
                     return {};
                 };
-                routerify(app, switchPath)({ history: Observable.never() });
+                routerify(app, switchPath)({ history: never() });
             }
         );
 
@@ -72,9 +74,7 @@ describe('Cyclic Router - RxJS 5', () => {
                 return {};
             };
             routerify(app, switchPath)({
-                history: adapt(
-                    makeServerHistoryDriver()(Observable.from(routes))
-                )
+                history: adapt(makeServerHistoryDriver()(from(routes)))
             });
         });
 
@@ -103,9 +103,7 @@ describe('Cyclic Router - RxJS 5', () => {
                 return {};
             };
             routerify(app, switchPath)({
-                history: adapt(
-                    makeServerHistoryDriver()(Observable.from(routes))
-                )
+                history: adapt(makeServerHistoryDriver()(from(routes)))
             });
         });
 
@@ -138,9 +136,7 @@ describe('Cyclic Router - RxJS 5', () => {
                 return {};
             };
             routerify(app, switchPath)({
-                history: adapt(
-                    makeServerHistoryDriver()(Observable.from(routes))
-                )
+                history: adapt(makeServerHistoryDriver()(from(routes)))
             });
         });
     });
@@ -158,7 +154,7 @@ describe('Cyclic Router - RxJS 5', () => {
                     assert.strictEqual(typeof router.createHref, 'function');
                     return {};
                 };
-                routerify(app, switchPath)({ history: Observable.never() });
+                routerify(app, switchPath)({ history: never() });
             }
         );
 
@@ -180,9 +176,7 @@ describe('Cyclic Router - RxJS 5', () => {
                 return {};
             };
             routerify(app, switchPath)({
-                history: adapt(
-                    makeServerHistoryDriver()(Observable.of('/some/route'))
-                )
+                history: adapt(makeServerHistoryDriver()(of('/some/route')))
             });
         });
 
@@ -214,10 +208,9 @@ describe('Cyclic Router - RxJS 5', () => {
             routerify(app, switchPath)({
                 history: adapt(
                     makeServerHistoryDriver()(
-                        Observable.of(
-                            '/wrong/path',
-                            '/some/nested/correct/route'
-                        ).delay(0)
+                        of('/wrong/path', '/some/nested/correct/route').pipe(
+                            delay(0)
+                        )
                     )
                 )
             });
@@ -245,15 +238,14 @@ describe('Cyclic Router - RxJS 5', () => {
                     );
                     done();
                 });
-                return { router: Observable.of('/wrong/path') };
+                return { router: of('/wrong/path') };
             };
             routerify(app, switchPath)({
                 history: adapt(
                     makeServerHistoryDriver()(
-                        Observable.of(
-                            '/wrong/route',
-                            '/some/nested/incorrect/route'
-                        ).delay(0)
+                        of('/wrong/route', '/some/nested/incorrect/route').pipe(
+                            delay(0)
+                        )
                     )
                 )
             });
@@ -284,15 +276,14 @@ describe('Cyclic Router - RxJS 5', () => {
                     //assert.strictEqual(location.pathname, createHref('/incorrect/route'))
                     done();
                 });
-                return { router: Observable.of('/wrong/path') };
+                return { router: of('/wrong/path') };
             };
             routerify(app, switchPath)({
                 history: adapt(
                     makeServerHistoryDriver()(
-                        Observable.of(
-                            '/wrong/route',
-                            '/some/nested/incorrect/route'
-                        ).delay(0)
+                        of('/wrong/route', '/some/nested/incorrect/route').pipe(
+                            delay(0)
+                        )
                     )
                 )
             });
@@ -322,14 +313,12 @@ describe('Cyclic Router - RxJS 5', () => {
                     }
                 );
 
-                return { router: Observable.of('/wrong/path') };
+                return { router: of('/wrong/path') };
             };
             routerify(app, switchPath)({
                 history: adapt(
                     makeServerHistoryDriver()(
-                        Observable.of(
-                            '/some/nested/correct/route/partial'
-                        ).delay(0)
+                        of('/some/nested/correct/route/partial').pipe(delay(0))
                     )
                 )
             });

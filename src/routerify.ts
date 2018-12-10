@@ -3,11 +3,11 @@ import { adapt } from '@cycle/run/lib/adapt';
 import { RouteMatcher } from './interfaces';
 import { RouterSource } from './RouterSource';
 import { Location, createPath } from 'history';
-import { HistoryInput, GenericInput } from '@cycle/history';
+import { HistoryInput } from '@cycle/history';
 import { Stream } from 'xstream';
 
-export declare type HistoryAction = HistoryInput | GenericInput | string;
-export declare type RouterSink = Stream<HistoryAction>;
+export { HistoryInput } from '@cycle/history';
+export type RouterSink = Stream<HistoryInput>;
 
 export interface RouterOptions {
     basename?: string;

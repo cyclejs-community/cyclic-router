@@ -2,6 +2,9 @@ import { Pathname } from '@cycle/history';
 import { LocationDescriptorObject } from 'history';
 
 function splitPath(path: Pathname): Pathname[] {
+    if (!path) {
+        return [];
+    }
     return path.split('/').filter(p => p.length > 0);
 }
 
@@ -19,15 +22,15 @@ function makeCreateHref(
     _createHref: (pathname: LocationDescriptorObject) => Pathname
 ) {
     /**
-   * Function used to create HREFs that are properly namespaced
-   * @typedef {createHref}
-   * @name createHref
-   * @method createHref
-   * @param  {string} path - the HREF that will be appended to the current
-   * namespace
-   * @return {string} a fully qualified HREF composed from the current
-   * namespace and the path provided
-   */
+     * Function used to create HREFs that are properly namespaced
+     * @typedef {createHref}
+     * @name createHref
+     * @method createHref
+     * @param  {string} path - the HREF that will be appended to the current
+     * namespace
+     * @return {string} a fully qualified HREF composed from the current
+     * namespace and the path provided
+     */
     return function createHref(
         location: Pathname | LocationDescriptorObject
     ): Pathname {

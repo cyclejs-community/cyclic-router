@@ -67,6 +67,7 @@ export class RouterSource {
                 const { path, value } = matcher(filteredPath, routes);
                 return { path, value, location, createHref };
             })
+            .filter(({ path }: any) => path !== undefined && path !== null)
             .remember();
 
         const out$ = adapt(match$);
