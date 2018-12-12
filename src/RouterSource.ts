@@ -15,6 +15,16 @@ function isStrictlyInScope(namespace: Pathname[], path: Pathname): boolean {
     });
 }
 
+function hasLocalRootScope(namespace: Pathname[], path: Pathname): boolean {
+    const pathParts = util.splitPath(path);
+    return (
+        namespace.length === pathParts.length + 1 &&
+        namespace.slice(0, namespace.length - 1).every((v, i) => {
+            return pathParts[i] === v;
+        })
+    );
+}
+
 function getFilteredPath(namespace: Pathname[], path: Pathname): Pathname {
     const pathParts = util.splitPath(path);
     return '/' + util.filterPath(pathParts, namespace);
@@ -30,14 +40,18 @@ export class RouterSource {
 
     history$ = adapt(this._history$);
 
-    path(pathname: Pathname): RouterSource {
+    path(pathname: Pathname, allowRootScope?: boolean): RouterSource {
         const scopedNamespace = this._namespace.concat(
             util.splitPath(pathname)
         );
         const scopedHistory$ = this._history$
-            .filter(({ pathname: _path }: Location) =>
-                isStrictlyInScope(scopedNamespace, _path)
-            )
+            .filter(({ pathname: _path }: Location) => {
+                return isStrictlyInScope(scopedNamespace, _path)
+                    ? true
+                    : allowRootScope
+                      ? hasLocalRootScope(scopedNamespace, _path)
+                      : false;
+            })
             .remember();
 
         const createHref = this._createHref;
