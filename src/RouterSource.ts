@@ -25,7 +25,8 @@ export class RouterSource {
         private _history$: any,
         private _namespace: Pathname[],
         private _createHref: (path: LocationDescriptorObject) => Pathname,
-        private _routeMatcher: RouteMatcher
+        private _routeMatcher: RouteMatcher,
+        private _name: string
     ) {}
 
     history$ = adapt(this._history$);
@@ -45,11 +46,12 @@ export class RouterSource {
             scopedHistory$,
             scopedNamespace,
             createHref,
-            this._routeMatcher
+            this._routeMatcher,
+            this._name
         );
     }
 
-    define(
+    private _define(
         routes: RouteDefinitionsMap | RouteDefinitionsArray,
         routeMatcher?: RouteMatcher
     ): any {
@@ -57,7 +59,7 @@ export class RouterSource {
         const _createHref = this._createHref;
         const createHref = util.makeCreateHref(namespace, _createHref);
 
-        let match$ = this._history$
+        return this._history$
             .map((location: Location) => {
                 const matcher = routeMatcher || this._routeMatcher;
                 const filteredPath = getFilteredPath(
@@ -69,10 +71,35 @@ export class RouterSource {
             })
             .filter(({ path }: any) => path !== undefined && path !== null)
             .remember();
+    }
 
-        const out$ = adapt(match$);
+    define(
+        routes: RouteDefinitionsMap | RouteDefinitionsArray,
+        routeMatcher?: RouteMatcher
+    ): any {
+        const _createHref = this._createHref;
+        const createHref = util.makeCreateHref(this._namespace, _createHref);
+
+        const out$ = adapt(this._define(routes, routeMatcher));
         out$.createHref = createHref;
         return out$;
+    }
+
+    routedComponent(
+        routes: RouteDefinitionsMap | RouteDefinitionsArray,
+        routeMatcher?: RouteMatcher
+    ): (sources: any) => any {
+        const name = this._name;
+        return sources => {
+            const match$ = this._define(routes, routeMatcher);
+            const page$ = match$.map(({ path, value }: any) => {
+                return value({
+                    ...sources,
+                    [name]: sources[name].path(path)
+                });
+            });
+            return adapt(page$);
+        };
     }
 
     createHref(path: Pathname): Pathname {

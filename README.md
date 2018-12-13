@@ -34,21 +34,13 @@ import {makeHistoryDriver} from '@cycle/history';
 import switchPath from 'switch-path';
 
 function main(sources) {
-  const match$ = sources.router.define({
+  const pageSinks$ = sources.router.routedComponent({
     '/': HomeComponent,
     '/other': OtherComponent
-  });
-  
-  const page$ = match$.map(({path, value}) => {
-    return value(Object.assign({}, sources, {
-      router: sources.router.path(path) // notice use of 'router' source name, 
-                                        // which proxies raw 'history' source with 
-                                        // additional functionality
-    }));
-  });
+  })(sources);
   
   return {
-    DOM: page$.map(c => c.DOM).flatten(),
+    DOM: pageSinks$.map(c => c.DOM).flatten(),
     router: xs.of('/other') // Notice use of 'router' sink name, 
                             // which proxies the original 'history' sink
   };
