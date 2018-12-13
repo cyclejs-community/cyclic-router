@@ -49,13 +49,13 @@
     "babel-register": "^6.24.1",
     "babelify": "^7.3.0",
     "browserify": "^14.4.0",
-    "cli-release": "^1.0.4",
     "ghooks": "^1.2.1",
     "husky": "^1.2.0",
     "lint-staged": "^4.0.3",
     "mkdirp": "^0.5.1",
     "mocha": "^3.4.2",
     "prettier": "^1.5.3",
+    "release-it": "^9.0.0",
     "rxjs": "^6.3.3",
     "switch-path": "^1.2.0",
     "testem": "^1.16.1",
@@ -85,11 +85,10 @@
     "lib:cjs": "tsc --module commonjs --outDir ./lib",
     "lib:es6": "tsc --module es6 --outDir ./lib/es6",
     "start": "npm install && npm prune",
-    "prerelease": "npm run lib",
-    "release": "npm run release-patch",
-    "release-patch": "git checkout master && release patch && npm publish --access=public",
-    "release-minor": "git checkout master && release minor && npm publish --access=public",
-    "release-major": "git checkout master && release major && npm publish --access=public"
+    "prepublishOnly": "npm run lib",
+    "release-patch": "release-it patch",
+    "release-minor": "release-it minor",
+    "release-major": "release-it major"
   },
   "husky": {
     "hooks": {
