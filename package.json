@@ -32,14 +32,15 @@
   },
   "homepage": "https://github.com/cyclejs-community/cyclic-router#readme",
   "peerDependencies": {
-    "@cycle/history": "*"
+    "@cycle/history": "*",
+    "history": "*"
   },
   "dependencies": {
     "@cycle/run": "*"
   },
   "devDependencies": {
-    "@cycle/history": "^6.9.0",
-    "@cycle/rxjs-run": "^8.0.0",
+    "@cycle/history": "^7.1.0",
+    "@cycle/rxjs-run": "^10.2.0",
     "@types/history": "^4.6.0",
     "@types/mocha": "^2.2.41",
     "@types/node": "^8.0.19",
@@ -50,16 +51,16 @@
     "browserify": "^14.4.0",
     "cli-release": "^1.0.4",
     "ghooks": "^1.2.1",
-    "husky": "^0.14.3",
+    "husky": "^1.2.0",
     "lint-staged": "^4.0.3",
     "mkdirp": "^0.5.1",
     "mocha": "^3.4.2",
     "prettier": "^1.5.3",
-    "rxjs": "^5.5.2",
+    "rxjs": "^6.3.3",
     "switch-path": "^1.2.0",
     "testem": "^1.16.1",
     "tslint": "^3.10.2",
-    "typescript": "^2.4.2",
+    "typescript": "^3.2.2",
     "uglify-js": "^3.0.12",
     "validate-commit-message": "^3.0.1",
     "xstream": "^11.0.0"
@@ -71,8 +72,6 @@
     ]
   },
   "scripts": {
-    "precommit": "lint-staged",
-    "commitmsg": "validate-commit-msg $2",
     "format": "prettier --tab-width 4 --single-quote --write '{src,test}/**/*.{js,ts,tsx}'",
     "lint": "tslint -c tslint.json src/*.ts src/**/*.ts",
     "test-node": "mocha -r babel-register test/index.js",
@@ -91,5 +90,11 @@
     "release-patch": "git checkout master && release patch && npm publish --access=public",
     "release-minor": "git checkout master && release minor && npm publish --access=public",
     "release-major": "git checkout master && release major && npm publish --access=public"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "validate-commit-msg $2",
+      "pre-commit": "lint-staged"
+    }
   }
 }
